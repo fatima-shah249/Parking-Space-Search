@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .modal-backdrop { background-color: rgba(0, 0, 0, 0.5); }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Parking Zones Management</h1>
+        </header>
+        <!-- Navigation to other admin pages -->
+        <div class="mb-6">
+            <a href="{{ url_for('admin_concerns') }}" class="bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition duration-200">
+                <i class="fas fa-inbox mr-2"></i>View User Concerns
+            </a>
+        </div>
+
+        <!-- Main content area -->
+        <main class="bg-white rounded-xl shadow-md p-6">
+            <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+                <h2 class="text-xl font-semibold">All Locations</h2>
+                <form id="searchForm" class="flex items-center gap-2">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </span>
+                        <input type="text" id="searchInput" placeholder="Search by location..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
+                    </div>
+                    <button type="submit" class="bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition duration-200">Search</button>
+                </form>
+                <button id="addSlotBtn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition duration-200">
+                    <i class="fas fa-plus mr-2"></i>Add New Zone
+                </button>
+            </div>
+
+            <!-- Table to display parking slot data -->
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Coordinates</th>
+                            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Available</th>
+                            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Occupied</th>
+                            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="slotsTableBody" class="divide-y divide-gray-200">
+                        <!-- Rows will be dynamically inserted here by JavaScript -->
+                    </tbody>
+                </table>
+                 <div id="loadingIndicator" class="text-center py-8">
+                    <i class="fas fa-spinner fa-spin text-2xl text-gray-500"></i>
+                    <p class="mt-2 text-gray-600">Loading data...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for Adding/Editing a Slot -->
+    <div id="slotModal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal-backdrop">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4">
+            <form id="slotForm" class="p-8">
+                <h2 id="modalTitle" class="text-2xl font-bold mb-6">Add New Zone</h2>
+                <input type="hidden" id="slot_id" name="slot_id">
+                <div class="space-y-4">
+                    <div>
+                        <label for="location" class="block text-sm font-medium text-gray-700">Location Name</label>
+                        <input type="text" id="location" name="location" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="latitude" class="block text-sm font-medium text-gray-700">Latitude</label>
+                            <input type="number" step="any" id="latitude" name="latitude" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="longitude" class="block text-sm font-medium text-gray-700">Longitude</label>
+                            <input type="number" step="any" id="longitude" name="longitude" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="available_slots" class="block text-sm font-medium text-gray-700">Available Slots</label>
+                            <input type="number" id="available_slots" name="available_slots" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="occupied_slots" class="block text-sm font-medium text-gray-700">Occupied Slots</label>
+                            <input type="number" id="occupied_slots" name="occupied_slots" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end space-x-4">
+                    <button type="button" id="cancelBtn" class="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition duration-200">Cancel</button>
+                    <button type="submit" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">Save Zone</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tableBody = document.getElementById('slotsTableBody');
+            const modal = document.getElementById('slotModal');
+            const addSlotBtn = document.getElementById('addSlotBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const slotForm = document.getElementById('slotForm');
+            const modalTitle = document.getElementById('modalTitle');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const searchForm = document.getElementById('searchForm');
+            const searchInput = document.getElementById('searchInput');
+
+            const API_URL = '/api/slots';
+
+            function setInitialState() {
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">Enter a location and click Search to see results.</td></tr>`;
+                loadingIndicator.style.display = 'none';
+            }
+            
+            async function fetchAndRenderSlots(query) {
+                loadingIndicator.style.display = 'block';
+                tableBody.innerHTML = ''; 
+                try {
+                    const response = await fetch(`${API_URL}?search=${encodeURIComponent(query)}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const slots = await response.json();
+                    
+                    if (slots.length === 0) {
+                        tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">No results found for "${query}".</td></tr>`;
+                    } else {
+                        slots.forEach(slot => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td class="py-4 px-4 whitespace-nowrap font-medium text-gray-900">${slot.slot_id}</td>
+                                <td class="py-4 px-4 whitespace-nowrap">${slot.location}</td>
+                                <td class="py-4 px-4 whitespace-nowrap text-sm text-gray-500">${slot.latitude}, ${slot.longitude}</td>
+                                <td class="py-4 px-4 whitespace-nowrap text-green-600 font-semibold">${slot.available_slots}</td>
+                                <td class="py-4 px-4 whitespace-nowrap text-red-600 font-semibold">${slot.occupied_slots}</td>
+                                <td class="py-4 px-4 whitespace-nowrap text-sm font-medium">
+                                    <button class="text-blue-600 hover:text-blue-900 mr-4 edit-btn" data-id="${slot.slot_id}"><i class="fas fa-edit"></i> Edit</button>
+                                    <button class="text-red-600 hover:text-red-900 delete-btn" data-id="${slot.slot_id}"><i class="fas fa-trash"></i> Delete</button>
+                                </td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch slots:", error);
+                    tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-red-500">Error loading data. Please check the console.</td></tr>`;
+                } finally {
+                     loadingIndicator.style.display = 'none';
+                }
+            }
+
+            function openModal(slot = null) {
+                slotForm.reset();
+                if (slot) {
+                    modalTitle.textContent = 'Edit Slot';
+                    document.getElementById('slot_id').value = slot.slot_id;
+                    document.getElementById('location').value = slot.location;
+                    document.getElementById('latitude').value = slot.latitude;
+                    document.getElementById('longitude').value = slot.longitude;
+                    document.getElementById('available_slots').value = slot.available_slots;
+                    document.getElementById('occupied_slots').value = slot.occupied_slots;
+                } else {
+                    modalTitle.textContent = 'Add New Slot';
+                    document.getElementById('slot_id').value = '';
+                }
+                modal.classList.remove('hidden');
+            }
+
+            function closeModal() {
+                modal.classList.add('hidden');
+            }
+
+            async function handleFormSubmit(event) {
+                event.preventDefault();
+                const formData = new FormData(slotForm);
+                const slotData = Object.fromEntries(formData.entries());
+                const slotId = slotData.slot_id;
+
+                slotData.latitude = parseFloat(slotData.latitude);
+                slotData.longitude = parseFloat(slotData.longitude);
+                slotData.available_slots = parseInt(slotData.available_slots, 10);
+                slotData.occupied_slots = parseInt(slotData.occupied_slots, 10);
+
+                const isUpdating = !!slotId;
+                const url = isUpdating ? `${API_URL}/${slotId}` : API_URL;
+                const method = isUpdating ? 'PUT' : 'POST';
+
+                try {
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(slotData),
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Failed to save the slot.');
+                    }
+
+                    closeModal();
+                    const lastSearch = searchInput.value.trim();
+                    if (lastSearch) {
+                        fetchAndRenderSlots(lastSearch);
+                    }
+                } catch (error) {
+                    console.error('Save failed:', error);
+                    alert(`Error: ${error.message}`);
+                }
+            }
+
+            async function handleTableClick(event) {
+                const target = event.target.closest('button');
+                if (!target) return;
+
+                const slotId = target.dataset.id;
+
+                if (target.classList.contains('edit-btn')) {
+                    try {
+                        const response = await fetch(`${API_URL}/${slotId}`);
+                        if (!response.ok) throw new Error('Failed to fetch slot details');
+                        const slot = await response.json();
+                        openModal(slot);
+                    } catch (error) {
+                        console.error('Edit error:', error);
+                        alert('Could not load slot data for editing.');
+                    }
+                }
+
+                if (target.classList.contains('delete-btn')) {
+                    if (confirm('Are you sure you want to delete this slot?')) {
+                        try {
+                            const response = await fetch(`${API_URL}/${slotId}`, { method: 'DELETE' });
+                            if (!response.ok) throw new Error('Failed to delete slot');
+                            const lastSearch = searchInput.value.trim();
+                            if (lastSearch) {
+                                fetchAndRenderSlots(lastSearch);
+                            } else {
+                                setInitialState();
+                            }
+                        } catch (error) {
+                            console.error('Delete error:', error);
+                            alert('Could not delete the slot.');
+                        }
+                    }
+                }
+            }
+
+            function handleSearch(event) {
+                event.preventDefault();
+                const searchTerm = searchInput.value.trim();
+                if (searchTerm) {
+                    fetchAndRenderSlots(searchTerm);
+                } else {
+                    setInitialState();
+                }
+            }
+
+            addSlotBtn.addEventListener('click', () => openModal());
+            cancelBtn.addEventListener('click', closeModal);
+            slotForm.addEventListener('submit', handleFormSubmit);
+            tableBody.addEventListener('click', handleTableClick);
+            searchForm.addEventListener('submit', handleSearch);
+
+            setInitialState();
+        });
+    </script>
+</body>
+</html>

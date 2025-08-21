@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}About Us{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-md p-8">
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">About ParkingFinder</h1>
+        <p class="text-lg text-gray-600">Simplifying your parking experience with advanced technology.</p>
+    </div>
+    
+    <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-12 items-center mb-12">
+        <div>
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-bullseye-pointer mr-3 text-blue-600"></i>
+                Our Mission
+            </h2>
+            <p class="text-gray-700">
+                At ParkingFinder, our mission is to eliminate the stress of finding a parking spot. We provide a seamless, real-time solution that connects drivers with available parking zones, saving you time, fuel, and frustration.
+            </p>
+        </div>
+        <div>
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+                 <i class="fas fa-satellite-dish mr-3 text-blue-600"></i>
+                Our Technology
+            </h2>
+            <p class="text-gray-700">
+                A core component of our service is the use of <strong>NavIC (Navigation with Indian Constellation)</strong>, India's own satellite navigation system. By integrating NavIC, we ensure precise and reliable location tracking to guide you to the nearest available parking slots with exceptional accuracy.
+            </p>
+        </div>
+    </div>
+
+    <div class="text-center">
+         <h2 class="text-3xl font-bold text-gray-900 mb-8">Why Choose Us?</h2>
+         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Feature 1 -->
+            <div class="bg-gray-50 p-6 rounded-lg">
+                <i class="fas fa-clock text-3xl text-blue-600 mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">Save Time</h3>
+                <p class="text-gray-600">Stop circling the block. Find available parking instantly and get to your destination faster.</p>
+            </div>
+            <!-- Feature 2 -->
+            <div class="bg-gray-50 p-6 rounded-lg">
+                <i class="fas fa-map-marked-alt text-3xl text-blue-600 mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">Accurate Guidance</h3>
+                <p class="text-gray-600">Powered by NavIC, we provide pinpoint accuracy to guide you directly to your spot.</p>
+            </div>
+            <!-- Feature 3 -->
+            <div class="bg-gray-50 p-6 rounded-lg">
+                <i class="fas fa-car text-3xl text-blue-600 mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">Stress-Free</h3>
+                <p class="text-gray-600">Navigate busy areas with confidence, knowing a parking spot is waiting for you.</p>
+            </div>
+         </div>
+    </div>
+</div>
+{% endblock %}

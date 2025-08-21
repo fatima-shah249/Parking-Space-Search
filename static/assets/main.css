@@ -1,0 +1,62 @@
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f2f2f2;
+}
+
+
+.navbar {
+    background-color: #333;
+    overflow: hidden;
+}
+.navbar ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+}
+.navbar li {
+    flex: 1;
+}
+.navbar a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px;
+    text-decoration: none;
+}
+.navbar a:hover {
+    background-color: #575757;
+}
+
+
+.search-box {
+    margin-top: 100px;
+    text-align: center;
+}
+.search-box input {
+    margin: 10px;
+    padding: 10px;
+    width: 200px;
+}
+.search-box button {
+    padding: 10px 20px;
+    background-color: #333;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+.search-box button:hover {
+    background-color: #575757;
+}
+#slot_head{
+    text-align: center;
+}
+#back{
+    border-bottom: none;
+    text-decoration: none;
+    color: black;
+    font-size:18px;
+}

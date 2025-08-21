@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Find Nearby Parking{% endblock %}
+
+{% block content %}
+<!-- Search Section -->
+<div class="bg-white rounded-xl shadow-md p-8 mb-8 text-center">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Find Nearby Parking Zones</h1>
+    <p class="text-gray-600 mb-4">
+        Easily locate parking zones within your chosen distance. 
+        We’ll show you available and occupied slots so you can plan ahead and save time.
+    </p>
+    <p class="text-blue-600 font-medium mb-6">
+        💡 Tip: Enter a smaller radius for quicker results or a larger one to explore more options.
+    </p>
+    <form method="POST" class="flex flex-col sm:flex-row justify-center items-center gap-4">
+        <div class="flex items-center gap-2">
+            <label for="radius" class="text-lg font-medium">Distance (in m):</label>
+            <input type="number" step="0.1" name="radius" id="radius" required
+                class="w-32 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm 
+                       focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        <button type="submit"
+            class="w-full sm:w-auto bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg 
+                   shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 
+                   focus:ring-blue-500 focus:ring-opacity-75 transition duration-200">
+            <i class="fas fa-search mr-2"></i>Search
+        </button>
+    </form>
+</div>
+
+<!-- Results Section -->
+<div>
+    {% if slots %}
+        <h2 class="text-2xl font-semibold text-center mb-6">Zones within {{ radius_km }} km</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {% for slot in slots %}
+            <div class="bg-white rounded-xl shadow-md p-6 transform hover:-translate-y-1 transition-transform duration-300">
+                <h3 class="text-lg font-bold text-gray-800 mb-2">Zone ID: {{ slot.slot_id }}</h3>
+                <p class="text-gray-700 mb-1"><strong><i class="fas fa-map-marker-alt mr-2 text-gray-500"></i>Location:</strong> {{ slot.location }}</p>
+                <p class="text-green-600 font-semibold mb-1"><strong>Available Slots:</strong> {{ slot.available_slots }}</p>
+                <p class="text-red-600 font-semibold mb-1"><strong>Occupied Slots:</strong> {{ slot.occupied_slots }}</p>
+                <p class="text-gray-600 mb-4"><strong><i class="fas fa-road mr-2 text-gray-500"></i>Distance:</strong> {{ "%.2f"|format(slot.distance_m *1000)  }} m</p>
+                <a href="{{ url_for('map_view', zone_id=slot.slot_id, lat=slot.latitude, lng=slot.longitude) }}" class="w-full text-center block bg-gray-800 text-white font-semibold py-2 px-4 rounded-lg hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-700 transition duration-200">
+                    Show Route
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    {% elif radius is not none %}
+        <div class="text-center bg-white rounded-xl shadow-md p-8">
+            <p class="text-lg text-gray-600">No nearby slots found within {{ radius_km }} km.</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}
