@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Partner Application{% endblock %}
+
+{% block content %}
+<div class="bg-gray-100 min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-800">Become a Parking Partner</h1>
+            <p class="mt-4 text-lg text-gray-600">Please provide your details and documentation for verification. Our team will review your application shortly.</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-8">
+            <form method="POST" action="{{ url_for('submit_parking_zone') }}" enctype="multipart/form-data" class="space-y-8">
+                
+                <!-- Step 1: Your Details -->
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-6">Step 1: Your Details</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="owner_name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                            <!-- Autofilled value and set to readonly -->
+                            <input type="text" id="owner_name" name="owner_name" required value="{{ user.username }}" readonly class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm">
+                        </div>
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                            <!-- Autofilled value and set to readonly -->
+                            <input type="email" id="email" name="email" required value="{{ user.email }}" readonly class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm">
+                        </div>
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                            <input type="tel" id="phone" name="phone" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="address" class="block text-sm font-medium text-gray-700">Parking Zone Address</label>
+                            <input type="text" id="address" name="address" required placeholder="123 Main St, City, State" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="location_link" class="block text-sm font-medium text-gray-700">Google Maps Link</label>
+                            <input type="url" id="location_link" name="location_link" required placeholder="https://maps.app.goo.gl/..." class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <p class="mt-1 text-xs text-gray-500">Share a link to your parking location for precise mapping.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Zone Specifications -->
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-6">Step 2: Zone Specifications</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="slot_count" class="block text-sm font-medium text-gray-700">Number of Parking Slots</label>
+                            <input type="number" id="slot_count" name="slot_count" min="1" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="security_level" class="block text-sm font-medium text-gray-700">Security Level</label>
+                            <select id="security_level" name="security_level" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select a security level...</option>
+                                <option value="none">No Security</option>
+                                <option value="cctv">CCTV Surveillance</option>
+                                <option value="guard">On-site Security Guard</option>
+                                <option value="full">Both Guard and CCTV</option>
+                            </select>
+                        </div>
+                         <div>
+                            <label for="price" class="block text-sm font-medium text-gray-700">Price per Hour (in ₹)</label>
+                            <input type="number" id="price" name="price" min="0" step="1" required placeholder="Auto-suggested" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                             <p class="mt-1 text-xs text-gray-500">Suggested price based on security. You can edit this value.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Verification Documents -->
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-6">Step 3: Verification Documents</h2>
+                     <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Government-issued ID</label>
+                            <p class="text-xs text-gray-500 mb-2">Upload a clear image of your Aadhaar Card, PAN Card, or Driver's License. <b>Please Upload [png, jpg, jpeg, pdf]</b></p>
+                            <input type="file" id="govt_id" name="govt_id" required class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Proof of Property Ownership</label>
+                            <p class="text-xs text-gray-500 mb-2">Upload a document like a property deed, lease agreement, or utility bill showing your name and the zone's address. <br><b>Please Upload [png, jpg, jpeg, pdf]</b></p>
+                            <input type="file" id="property_proof" name="property_proof" required class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Photo of Your Parking Zone</label>
+                            <p class="text-xs text-gray-500 mb-2">A clear photo of the parking entrance and spaces. <b>Please Upload [png, jpg, jpeg, pdf]</b></p>
+                            <input type="file" id="zone_photo" name="zone_photo" required class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Declaration -->
+                <div class="pt-4">
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input id="declaration" name="declaration" type="checkbox" required class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="declaration" class="font-medium text-gray-700">I hereby declare that I am the legal owner or have the authority to lease this property for business purposes, and all information provided is true and accurate.</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="pt-4 text-right">
+                    <button type="submit" class="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Submit Application for Review
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const securitySelect = document.getElementById('security_level');
+    const priceInput = document.getElementById('price');
+    const priceSuggestions = {
+        '': '',
+        'none': 30,
+        'cctv': 40,        
+        'guard': 50,
+        'full': 60
+    };
+    securitySelect.addEventListener('change', function() {
+        const selectedLevel = this.value;
+        const suggestedPrice = priceSuggestions[selectedLevel];
+        priceInput.value = suggestedPrice;
+    });
+</script>
+{% endblock %}
+

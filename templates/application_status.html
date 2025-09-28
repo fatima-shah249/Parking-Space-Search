@@ -1,0 +1,48 @@
+{% extends "Civilian_home.html" %}
+
+{% block title %}Civilian Home{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h2 class="text-3xl font-bold mb-6">My Applications</h2>
+
+    {% if applications %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white rounded-lg shadow">
+                <thead class="bg-gray-200">
+                    <tr>
+                        <th class="px-4 py-2 text-left">Submission Date</th>
+                        <th class="px-4 py-2 text-left">Parking Address</th>
+                        <th class="px-4 py-2 text-left">Price /hr</th>
+                        <th class="px-4 py-2 text-left">Security</th>
+                        <th class="px-4 py-2 text-left">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for app in applications %}
+                    <tr>
+                        <td class="px-4 py-2">{{ app.submission_date.strftime('%Y-%m-%d %H:%M') if app.submission_date else 'Not Submitted' }}</td>
+                        <td class="px-4 py-2">{{ app.address or 'N/A' }}</td>
+                        <td class="px-4 py-2">₹{{ app.price_per_hour or 'N/A' }}</td>
+                        <td class="px-4 py-2">{{ app.security_level or 'N/A' }}</td>
+                        <td class="px-4 py-2">
+                            {% if app.status == 'approved' %}
+                                <span class="px-2 py-1 rounded-full bg-green-100 text-green-800 font-semibold text-sm">Approved</span>
+                            {% elif app.status == 'rejected' %}
+                                <span class="px-2 py-1 rounded-full bg-red-100 text-red-800 font-semibold text-sm">Rejected</span>
+                            {% elif app.status == 'pending' %}
+                                <span class="px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 font-semibold text-sm">Pending</span>
+                            {% else %}
+                                <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-800 font-semibold text-sm">No Status</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-gray-500">You have not submitted any applications yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

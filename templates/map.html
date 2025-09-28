@@ -7,8 +7,17 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
 <style>
-  #map { height: 100%; min-height: 500px; width: 100%; }
-  .leaflet-routing-container { display: none !important; } /* hide turn-by-turn panel */
+  #map {
+    height: 100%;
+    min-height: 500px;
+    width: 100%;
+  }
+
+  .leaflet-routing-container {
+    display: none !important;
+  }
+
+  /* hide turn-by-turn panel */
 </style>
 {% endblock %}
 
@@ -17,59 +26,59 @@
   <!-- Left Column -->
   <div class="lg:w-1/3 w-full space-y-4 overflow-y-auto max-h-[80vh]">
     {% if selected_zone %}
-      <div class="bg-white rounded-xl shadow-md p-6 space-y-4">
-        <!-- Zone Info -->
-        <h3 class="text-xl font-bold text-gray-800">
-          Zone ID: {{ selected_zone.slot_id }}
-        </h3>
-        <p class="text-gray-700">
-          <i class="fas fa-map-marker-alt mr-2 text-gray-500"></i>
-          <strong>Location:</strong> {{ selected_zone.location }}
-        </p>
-        <p class="text-green-600 font-semibold">
-          <strong>Available Slots:</strong> {{ selected_zone.available_slots }}
-        </p>
-        <p class="text-red-600 font-semibold">
-          <strong>Occupied Slots:</strong> {{ selected_zone.occupied_slots }}
-        </p>
+    <div class="bg-white rounded-xl shadow-md p-6 space-y-4">
+      <!-- Zone Info -->
+      <h3 class="text-xl font-bold text-gray-800">
+        Zone ID: {{ selected_zone.slot_id }}
+      </h3>
+      <p class="text-gray-700">
+        <i class="fas fa-map-marker-alt mr-2 text-gray-500"></i>
+        <strong>Location:</strong> {{ selected_zone.location }}
+      </p>
+      <p class="text-green-600 font-semibold">
+        <strong>Available Slots:</strong> {{ selected_zone.available_slots }}
+      </p>
+      <p class="text-red-600 font-semibold">
+        <strong>Occupied Slots:</strong> {{ selected_zone.occupied_slots }}
+      </p>
 
-        <!-- Parking Charges -->
-        <div class="bg-gray-100 p-4 rounded-lg">
-          <h4 class="font-bold text-gray-800 mb-2">Parking Charges</h4>
-          <div class="flex items-center gap-4">
-            <label class="flex items-center space-x-2">
-              <input type="radio" name="vehicleType" value="car" class="text-blue-600" checked>
-              <span>Car - ₹{{ city_rates.car }}/hr</span>
-            </label>
-            <label class="flex items-center space-x-2">
-              <input type="radio" name="vehicleType" value="bike" class="text-blue-600">
-              <span>Bike - ₹{{ city_rates.bike }}/hr</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Payment Calculation -->
-        <div>
-          <label for="hours" class="block font-semibold text-gray-700 mb-1">
-            Duration (Hours)
+      <!-- Parking Charges -->
+      <div class="bg-gray-100 p-4 rounded-lg">
+        <h4 class="font-bold text-gray-800 mb-2">Parking Charges</h4>
+        <div class="flex items-center gap-4">
+          <label class="flex items-center space-x-2">
+            <input type="radio" name="vehicleType" value="car" class="text-blue-600" checked>
+            <span>Car - ₹{{ city_rates.car }}/hr</span>
           </label>
-          <input type="number" id="hours" name="hours" min="1" value="1"
-                 class="w-full p-2 border border-gray-300 rounded-lg">
+          <label class="flex items-center space-x-2">
+            <input type="radio" name="vehicleType" value="bike" class="text-blue-600">
+            <span>Bike - ₹{{ city_rates.bike }}/hr</span>
+          </label>
         </div>
-
-        <!-- Price Display -->
-        <div class="text-lg font-bold text-gray-800">
-          Total: ₹<span id="totalPrice">{{ city_rates.car }}</span>
-        </div>
-
-        <!-- Pay Button -->
-        <button onclick="proceedToPay()"
-                class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">
-          Proceed to Pay
-        </button>
       </div>
+
+      <!-- Payment Calculation -->
+      <div>
+        <label for="hours" class="block font-semibold text-gray-700 mb-1">
+          Duration (Hours)
+        </label>
+        <input type="number" id="hours" name="hours" min="1" value="1"
+          class="w-full p-2 border border-gray-300 rounded-lg">
+      </div>
+
+      <!-- Price Display -->
+      <div class="text-lg font-bold text-gray-800">
+        Total: ₹<span id="totalPrice">{{ city_rates.car }}</span>
+      </div>
+
+      <!-- Pay Button -->
+      <button onclick="proceedToPay()"
+        class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">
+        Proceed to Pay
+      </button>
+    </div>
     {% else %}
-      <p class="text-center text-gray-600">No zone details available.</p>
+    <p class="text-center text-gray-600">No zone details available.</p>
     {% endif %}
   </div>
 
@@ -87,153 +96,180 @@
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script>
-/* ---------- Razorpay ---------- */
-function proceedToPay() {
-  const selectedVehicle = document.querySelector('input[name="vehicleType"]:checked').value;
-  const hours = parseInt(document.getElementById('hours').value) || 1;
-  const amount = cityRates[selectedVehicle] * hours * 100; // paise
+  /* ---------- Razorpay ---------- */
+  const selectedSlotId = parseInt("{{ selected_zone.slot_id }}");  // 👈 inject from Flask
 
-  fetch("/create_order", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ amount: amount, vehicle: selectedVehicle })
-  })
-  .then(res => res.json())
-  .then(data => {
-    var options = {
-      key: data.key_id,
-      amount: data.amount,
-      currency: data.currency,
-      name: "Parking System",
-      description: `Parking Charges for ${hours} hour(s) - ${selectedVehicle}`,
-      order_id: data.order_id,
-      handler: function (response) {
-        alert("Payment Successful: " + response.razorpay_payment_id);
-        // Optional: redirect to success page
-      },
-      theme: { color: "#3399cc" }
-    };
-    new Razorpay(options).open();
-  })
-  .catch(err => console.error("Error creating order:", err));
-}
+  function proceedToPay() {
+    const selectedVehicle = document.querySelector('input[name="vehicleType"]:checked').value;
+    const hours = parseInt(document.getElementById('hours').value) || 1;
+    const amount = cityRates[selectedVehicle] * hours * 100; // paise
 
-/* ---------- Pricing UI ---------- */
-const cityRates = {
-  car: parseInt('{{ city_rates.car }}'),
-  bike: parseInt('{{ city_rates.bike }}')
-};
-const hoursInput = document.getElementById('hours');
-const totalPriceSpan = document.getElementById('totalPrice');
-const vehicleRadios = document.querySelectorAll('input[name="vehicleType"]');
+    fetch("/create_order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount: amount, vehicle: selectedVehicle })
+    })
+      .then(res => res.json())
+      .then(data => {
+        var options = {
+          key: data.key_id,
+          amount: data.amount,
+          currency: data.currency,
+          name: "Parking System",
+          description: `Parking Charges for ${hours} hour(s) - ${selectedVehicle}`,
+          order_id: data.order_id,
+          handler: function (response) {
+            alert("Payment Successful: " + response.razorpay_payment_id);
 
-function updateTotal() {
-  const hours = parseInt(hoursInput.value) || 1;
-  const selectedVehicle = document.querySelector('input[name="vehicleType"]:checked').value;
-  totalPriceSpan.textContent = cityRates[selectedVehicle] * hours;
-}
-hoursInput.addEventListener('input', updateTotal);
-vehicleRadios.forEach(r => r.addEventListener('change', updateTotal));
+            // Call backend to reduce available slots
+            fetch(`/api/slots/${slotId}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                location: "New Place",
+                latitude: 12.34,
+                longitude: 56.78,
+                available_slots: 20,
+                occupied_slots: 5
+              })
+            })
 
-/* ---------- Map + Live Tracking ---------- */
-// Initial coords from backend; if not available, set to null and fetch ASAP
-let currLat = parseInt('{{ user_lat }}');
-let currLng = parseInt('{{ user_lng }}');
-const destLat = parseFloat('{{ dest_lat }}');
-const destLng = parseFloat('{{ dest_lng }}');
 
-let map, userMarker, routingControl;
+              .then(res => res.json())
+              .then(data => {
+                console.log("Slot booking response:", data);
+                if (data.message) {
+                  alert("Slot booked successfully!");
+                  location.reload(); // Refresh UI to show updated slots
+                } else {
+                  alert("Error: " + data.error);
+                }
+              })
+              .catch(err => console.error("Error booking slot:", err));
+          },
+          theme: { color: "#3399cc" }
+        };
+        new Razorpay(options).open();
+      })
+      .catch(err => console.error("Error creating order:", err));
+  }
 
-function initMap() {
-  // If we don't have initial user coords, center on destination temporarily
-  const startLatLng = (isFinite(currLat) && isFinite(currLng))
+  /* ---------- Pricing UI ---------- */
+  const cityRates = {
+    car: parseInt('{{ city_rates.car }}'),
+    bike: parseInt('{{ city_rates.bike }}')
+  };
+  const hoursInput = document.getElementById('hours');
+  const totalPriceSpan = document.getElementById('totalPrice');
+  const vehicleRadios = document.querySelectorAll('input[name="vehicleType"]');
+
+  function updateTotal() {
+    const hours = parseInt(hoursInput.value) || 1;
+    const selectedVehicle = document.querySelector('input[name="vehicleType"]:checked').value;
+    totalPriceSpan.textContent = cityRates[selectedVehicle] * hours;
+  }
+  hoursInput.addEventListener('input', updateTotal);
+  vehicleRadios.forEach(r => r.addEventListener('change', updateTotal));
+
+  /* ---------- Map + Live Tracking ---------- */
+  // Initial coords from backend; if not available, set to null and fetch ASAP
+  let currLat = parseFloat('{{ user_lat }}');
+  let currLng = parseFloat('{{ user_lng }}');
+  const destLat = parseFloat('{{ dest_lat }}');
+  const destLng = parseFloat('{{ dest_lng }}');
+
+  let map, userMarker, routingControl;
+
+  function initMap() {
+    // If we don't have initial user coords, center on destination temporarily
+    const startLatLng = (isFinite(currLat) && isFinite(currLng))
       ? [currLat, currLng]
       : [destLat, destLng];
 
-  map = L.map('map').setView(startLatLng, 14);
+    map = L.map('map').setView(startLatLng, 14);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
 
-  const userIcon = L.icon({
-    iconUrl: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
-    iconSize: [32, 32],
-    iconAnchor: [16, 32]
-  });
+    const userIcon = L.icon({
+      iconUrl: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+      iconSize: [32, 32],
+      iconAnchor: [16, 32]
+    });
 
-  const destIcon = L.icon({
-    iconUrl: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-    iconSize: [32, 32],
-    iconAnchor: [16, 32]
-  });
+    const destIcon = L.icon({
+      iconUrl: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+      iconSize: [32, 32],
+      iconAnchor: [16, 32]
+    });
 
-  // Destination marker
-  const destMarker = L.marker([destLat, destLng], { icon: destIcon })
-    .addTo(map)
-    .bindPopup("Parking Zone");
-
-  // User marker (only if we have initial coords)
-  if (isFinite(currLat) && isFinite(currLng)) {
-    userMarker = L.marker([currLat, currLng], { icon: userIcon })
+    // Destination marker
+    const destMarker = L.marker([destLat, destLng], { icon: destIcon })
       .addTo(map)
-      .bindPopup("You are here");
-    drawRoute([currLat, currLng], [destLat, destLng]);
-    fitBoundsToMarkers(userMarker, destMarker);
-  } else {
-    // No user position yet — we’ll place marker after first fetch
-    userMarker = L.marker([destLat, destLng], { icon: userIcon, opacity: 0 }) // hidden for now
-      .addTo(map);
-  }
-}
+      .bindPopup("Parking Zone");
 
-function fitBoundsToMarkers(userMarker, destMarker) {
-  const group = L.featureGroup([userMarker, destMarker]);
-  map.fitBounds(group.getBounds().pad(0.2));
-}
-
-function drawRoute(start, end) {
-  if (routingControl) map.removeControl(routingControl);
-  routingControl = L.Routing.control({
-    waypoints: [L.latLng(start), L.latLng(end)],
-    routeWhileDragging: false,
-    addWaypoints: false,
-    draggableWaypoints: false,
-    createMarker: () => null,
-    show: false,
-    lineOptions: { styles: [{ opacity: 0.9, weight: 4 }] }
-  }).addTo(map);
-}
-
-function fetchLatestLocation() {
-  fetch('/get_latest_location')
-    .then(res => res.json())
-    .then(data => {
-      const lat = parseFloat(data.lat);
-      const lng = parseFloat(data.lng);
-      if (!isFinite(lat) || !isFinite(lng)) return;
-
-      currLat = lat; currLng = lng;
-
-      // First-time placement if hidden
-      if (userMarker && userMarker.options.opacity === 0) {
-        userMarker.setOpacity(1);
-        userMarker.setLatLng([currLat, currLng]);
-        drawRoute([currLat, currLng], [destLat, destLng]);
-        fitBoundsToMarkers(userMarker, L.marker([destLat, destLng]));
-        return;
-      }
-
-      // Smooth-ish movement
-      if (userMarker) userMarker.setLatLng([currLat, currLng]);
+    // User marker (only if we have initial coords)
+    if (isFinite(currLat) && isFinite(currLng)) {
+      userMarker = L.marker([currLat, currLng], { icon: userIcon })
+        .addTo(map)
+        .bindPopup("You are here");
       drawRoute([currLat, currLng], [destLat, destLng]);
-    })
-    .catch(err => console.error("Error fetching latest location:", err));
-}
+      fitBoundsToMarkers(userMarker, destMarker);
+    } else {
+      // No user position yet — we’ll place marker after first fetch
+      userMarker = L.marker([destLat, destLng], { icon: userIcon, opacity: 0 }) // hidden for now
+        .addTo(map);
+    }
+  }
 
-/* Kickoff */
-initMap();
-fetchLatestLocation();                 // try immediately
-setInterval(fetchLatestLocation, 10000); // then every 10s
+  function fitBoundsToMarkers(userMarker, destMarker) {
+    const group = L.featureGroup([userMarker, destMarker]);
+    map.fitBounds(group.getBounds().pad(0.2));
+  }
+
+  function drawRoute(start, end) {
+    if (routingControl) map.removeControl(routingControl);
+    routingControl = L.Routing.control({
+      waypoints: [L.latLng(start), L.latLng(end)],
+      routeWhileDragging: false,
+      addWaypoints: false,
+      draggableWaypoints: false,
+      createMarker: () => null,
+      show: false,
+      lineOptions: { styles: [{ opacity: 0.9, weight: 4 }] }
+    }).addTo(map);
+  }
+
+  function fetchLatestLocation() {
+    fetch('/get_latest_location')
+      .then(res => res.json())
+      .then(data => {
+        const lat = parseFloat(data.lat);
+        const lng = parseFloat(data.lng);
+        if (!isFinite(lat) || !isFinite(lng)) return;
+
+        currLat = lat; currLng = lng;
+
+        // First-time placement if hidden
+        if (userMarker && userMarker.options.opacity === 0) {
+          userMarker.setOpacity(1);
+          userMarker.setLatLng([currLat, currLng]);
+          drawRoute([currLat, currLng], [destLat, destLng]);
+          fitBoundsToMarkers(userMarker, L.marker([destLat, destLng]));
+          return;
+        }
+
+        // Smooth-ish movement
+        if (userMarker) userMarker.setLatLng([currLat, currLng]);
+        drawRoute([currLat, currLng], [destLat, destLng]);
+      })
+      .catch(err => console.error("Error fetching latest location:", err));
+  }
+
+  /* Kickoff */
+  initMap();
+  fetchLatestLocation();                 // try immediately
+  setInterval(fetchLatestLocation, 30000); // then every 30s
 </script>
 {% endblock %}

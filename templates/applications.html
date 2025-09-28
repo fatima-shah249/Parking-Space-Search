@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Applications{% endblock %}
+
+{% block content %}
+<!-- Use a slightly different background for contrast -->
+<div class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Partner Applications</h1>
+            <a href="{{ url_for('admin_page') }}" class="bg-white text-gray-700 font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-gray-100 border border-gray-300 transition duration-200">
+                &larr; Back to Dashboard
+            </a>
+        </div>
+
+        <!-- Application Cards Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {% if applications %}
+                {% for app in applications %}
+                <!-- Application Card -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden transform hover:-translate-y-1 transition-transform duration-300">
+                    <!-- Card Header -->
+                    <div class="p-5 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-800">{{ app.username }}</h2>
+                            <p class="text-sm text-gray-500">{{ app.email }}</p>
+                            <p class="text-sm text-gray-500 mt-1"><strong>Phone:</strong> {{ app.phone or 'N/A' }}</p>
+                        </div>
+                        <!-- Status Badge -->
+                        <div>
+                            {% if app.status == 'approved' %}
+                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Approved</span>
+                            {% elif app.status == 'rejected' %}
+                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Rejected</span>
+                            {% elif app.status == 'pending' %}
+                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending Review</span>
+                            {% else %}
+                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">No Application</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Card Body -->
+                    <div class="p-6 space-y-6">
+                        <!-- Parking Zone Details -->
+                        <div>
+                            <h3 class="font-semibold text-gray-700 mb-2">Parking Zone Details</h3>
+                            <div class="text-sm space-y-1 text-gray-600">
+                                <p><strong>Address:</strong> {{ app.address or 'N/A' }}</p>
+                                <p><strong>Map Link:</strong> 
+                                    {% if app.location_link %}
+                                        <a href="{{ app.location_link }}" target="_blank" class="text-blue-600 hover:underline">View Location</a>
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </p>
+                                <p><strong>Slots:</strong> {{ app.slot_count or 'N/A' }} | <strong>Price:</strong> ₹{{ app.price_per_hour or 'N/A' }}/hr | <strong>Security:</strong> {{ app.security_level or 'N/A' }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Documents -->
+                        <div>
+                            <h3 class="font-semibold text-gray-700 mb-2">Verification Documents</h3>
+                            {% if app.govt_id_path %}
+                            <div class="flex space-x-4 text-sm">
+                                <a href="{{ url_for('uploaded_file', filename=app.govt_id_path) }}" target="_blank" class="flex items-center text-blue-600 hover:underline">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                    Govt. ID
+                                </a>
+                                <a href="{{ url_for('uploaded_file', filename=app.property_proof_path) }}" target="_blank" class="flex items-center text-blue-600 hover:underline">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                    Property Proof
+                                </a>
+                                <a href="{{ url_for('uploaded_file', filename=app.zone_photo_path) }}" target="_blank" class="flex items-center text-blue-600 hover:underline">
+                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                    Zone Photo
+                                </a>
+                            </div>
+                            {% else %}
+                                <p class="text-sm text-gray-500 italic">No application submitted by this user.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Card Footer Actions -->
+                    {% if app.status == 'pending' %}
+                    <div class="p-5 bg-gray-50 border-t border-gray-200">
+                        <div class="flex justify-end space-x-3">
+                            <form action="{{ url_for('handle_application', app_id=app.id, action='reject') }}" method="POST" onsubmit="return confirm('Are you sure you want to REJECT this application?');">
+                                <button type="submit" class="px-4 py-2 text-sm font-semibold text-red-700 bg-red-100 rounded-lg hover:bg-red-200">Reject</button>
+                            </form>
+                            <form action="{{ url_for('handle_application', app_id=app.id, action='approve') }}" method="POST" onsubmit="return confirm('Are you sure you want to APPROVE this application?');">
+                                <button type="submit" class="px-4 py-2 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700">Approve</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-span-1 lg:col-span-2 text-center py-12">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No applications found</h3>
+                    <p class="mt-1 text-sm text-gray-500">When users submit new applications, they will appear here.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
