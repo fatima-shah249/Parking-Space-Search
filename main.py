@@ -9,20 +9,24 @@ from werkzeug.utils import secure_filename
 
 # --- Flask App Setup ---
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'a-very-secret-and-random-key-for-production'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:rootroot@localhost/parking_slots?ssl_disabled=True'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'a-default-local-secret-key')
+
+# --- Database URI ---
+# Use cloud DB if DATABASE_URL env var is set, else fallback to local SQLite
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///local.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # NEW: Configuration for file uploads
 
-UPLOAD_FOLDER = os.path.join('static', 'uploads')
+UPLOAD_FOLDER = os.path.join('static', 'uploads')   
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf'}
 
 
 # --- Razorpay Setup ---
-RAZORPAY_KEY_ID = "rzp_test_dNrnGiyXcjb2ug"
-RAZORPAY_KEY_SECRET = "RhMVJPhdBulIdw41Eq9TZcCm"
+RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID')
+RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET')
 client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+
 
 # Initialize DB
 db = SQLAlchemy(app)
