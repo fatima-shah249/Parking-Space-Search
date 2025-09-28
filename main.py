@@ -6,7 +6,8 @@ from sqlalchemy import create_engine, text, exc
 import razorpay
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from pandas import pandas as pd
+import pandas as pd
+
 # --- Flask App Setup ---
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'a-default-local-secret-key')
@@ -34,20 +35,18 @@ db = SQLAlchemy(app)
 DATABASE_URL = os.environ.get('DATABASE_URL')
 engine = create_engine(DATABASE_URL)
 
-# --- 1️⃣ Import location_of_slots CSV ---
-slots_df = pd.read_csv("data/location_of_slots.csv")  # adjust path if needed
-slots_df.to_sql('location_of_slots', engine, if_exists='append', index=False)
-print("location_of_slots imported successfully!")
+base_dir = os.path.join(os.path.dirname(__file__), "static", "data")
 
-# --- 2️⃣ Import user_applications CSV ---
-users_df = pd.read_csv("data/user_applications.csv")
-users_df.to_sql('user_applications', engine, if_exists='append', index=False)
-print("user_applications imported successfully!")
-
-# --- 3️⃣ Import user_concerns CSV ---
-concerns_df = pd.read_csv("data/user_concerns.csv")
-concerns_df.to_sql('user_concerns', engine, if_exists='append', index=False)
-print("user_concerns imported successfully!")
+# Import CSVs into the PostgreSQL database
+pd.read_csv(os.path.join(base_dir, "location_of_slots.csv")).to_sql(
+    'location_of_slots', engine, if_exists='append', index=False
+)
+pd.read_csv(os.path.join(base_dir, "user_applications.csv")).to_sql(
+    'user_applications', engine, if_exists='append', index=False
+)
+pd.read_csv(os.path.join(base_dir, "user_concerns.csv")).to_sql(
+    'user_concerns', engine, if_exists='append', index=False
+)
 
 # --- Global variables for dynamic location ---
 esp_lat = None
@@ -503,4 +502,6 @@ if __name__ == '__main__':
         db.create_all()
     if not os.path.exists(UPLOAD_FOLDER):
         os.makedirs(UPLOAD_FOLDER)
-    app.run(host='0.0.0.0',debug=True, port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
+
