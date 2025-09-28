@@ -2,11 +2,11 @@ import datetime
 import os
 from flask import Flask, render_template, redirect, request, jsonify, session, url_for, flash,send_from_directory
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import text, exc
+from sqlalchemy import create_engine, text, exc
 import razorpay
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-
+from pandas import pandas as pd
 # --- Flask App Setup ---
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'a-default-local-secret-key')
@@ -30,6 +30,24 @@ client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
 # Initialize DB
 db = SQLAlchemy(app)
+
+DATABASE_URL = os.environ.get('DATABASE_URL')
+engine = create_engine(DATABASE_URL)
+
+# --- 1️⃣ Import location_of_slots CSV ---
+slots_df = pd.read_csv("data/location_of_slots.csv")  # adjust path if needed
+slots_df.to_sql('location_of_slots', engine, if_exists='append', index=False)
+print("location_of_slots imported successfully!")
+
+# --- 2️⃣ Import user_applications CSV ---
+users_df = pd.read_csv("data/user_applications.csv")
+users_df.to_sql('user_applications', engine, if_exists='append', index=False)
+print("user_applications imported successfully!")
+
+# --- 3️⃣ Import user_concerns CSV ---
+concerns_df = pd.read_csv("data/user_concerns.csv")
+concerns_df.to_sql('user_concerns', engine, if_exists='append', index=False)
+print("user_concerns imported successfully!")
 
 # --- Global variables for dynamic location ---
 esp_lat = None

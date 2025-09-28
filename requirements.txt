@@ -31,5 +31,5 @@ WTForms==3.2.1
 xyzservices==2025.4.0
 gunicorn==21.2.0
 psycopg2-binary
-
+pandas
 

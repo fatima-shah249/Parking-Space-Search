@@ -1,0 +1,101 @@
+"slot_id";"location";"latitude";"longitude";"available_slots";"occupied_slots"
+1;"Indiranagar 1st Stage";12.9718;77.6402;9;3
+2;"Indiranagar 2nd Stage";12.972;77.6405;7;5
+3;"Indiranagar CMH Road";12.9723;77.641;4;6
+4;"Indiranagar BDA Complex";12.9715;77.6412;10;2
+5;"Indiranagar 100 Ft Road";12.9721;77.6408;8;5
+6;"Koramangala 1st Block";12.9355;77.6147;1;10
+7;"Koramangala 3rd Block";12.9353;77.6142;0;10
+8;"Koramangala 5th Block";12.936;77.615;10;2
+9;"Koramangala 6th Block";12.935;77.6135;1;9
+10;"Koramangala Sony Signal";12.9357;77.6149;2;0
+11;"Whitefield ITPL";12.9695;77.749;1;3
+12;"Whitefield Forum Value Mall";12.9699;77.7495;2;0
+13;"Whitefield Hope Farm";12.9702;77.75;10;1
+14;"Whitefield Main Road";12.97;77.7492;7;2
+15;"Whitefield Borewell Road";12.9697;77.7487;9;2
+16;"MG Road Metro";12.9738;77.612;4;0
+17;"MG Road Brigade Road";12.9741;77.6123;2;8
+18;"MG Road Church Street";12.9735;77.6118;4;5
+19;"MG Road Plaza";12.974;77.6115;2;5
+20;"MG Road Koshy’s";12.9743;77.6126;9;0
+21;"Jayanagar 1st Block";12.9248;77.5935;2;9
+22;"Jayanagar 3rd Block";12.9251;77.5939;10;5
+23;"Jayanagar 4th Block";12.9253;77.5942;8;8
+24;"Jayanagar 7th Block";12.9246;77.5932;8;10
+25;"Jayanagar Shopping Complex";12.925;77.5938;2;1
+26;"HSR Sector 1";12.9115;77.641;5;9
+27;"HSR Sector 2";12.9118;77.6413;2;3
+28;"HSR Sector 3";12.912;77.6416;5;4
+29;"HSR Sector 4";12.9112;77.6408;6;0
+30;"HSR BDA Complex";12.9117;77.6411;9;2
+31;"E City Phase 1";12.8392;77.6775;1;4
+32;"E City Phase 2";12.839;77.6773;2;4
+33;"Infosys Campus Gate 1";12.8395;77.6778;2;8
+34;"Wipro Gate 5";12.8388;77.677;5;1
+35;"Neeladri Road Junction";12.8393;77.6774;7;2
+36;"Majestic BMTC";12.9765;77.571;9;10
+37;"Majestic KSRTC";12.9762;77.5708;6;3
+38;"City Railway Station";12.9767;77.5713;8;1
+39;"Gandhi Nagar";12.976;77.5705;9;3
+40;"Kempegowda Circle";12.9764;77.5711;9;8
+41;"Yeshwanthpur Railway Station";13.0172;77.5563;7;2
+42;"Yeshwanthpur Metro Station";13.017;77.5561;8;4
+43;"Yeshwanthpur Market";13.0174;77.5566;7;5
+44;"Govardhan Theatre";13.0168;77.5559;5;1
+45;"Orion Mall";13.0171;77.5562;0;6
+46;"Hebbal Flyover";13.0355;77.5914;1;6
+47;"Esteem Mall";13.0352;77.591;4;9
+48;"Hebbal Kempapura";13.0357;77.5917;3;8
+49;"Hebbal Outer Ring Rd";13.035;77.5908;2;5
+50;"Manayata Gate 1";13.0354;77.5913;9;2
+51;"Banashankari TTMC";12.9183;77.5462;2;3
+52;"Banashankari 2nd Stage";12.918;77.546;7;7
+53;"Banashankari Temple";12.9185;77.5465;8;1
+54;"Kattriguppe Circle";12.9178;77.5458;9;3
+55;"BSK BDA Complex";12.9182;77.5463;9;9
+56;"Rajajinagar 1st Block";12.9918;77.5565;1;5
+57;"Rajajinagar 2nd Block";12.9916;77.5562;10;5
+58;"Rajajinagar 6th Block";12.992;77.5568;3;9
+59;"Rajajinagar Metro";12.9914;77.556;8;5
+60;"ISKCON Temple";12.9917;77.5564;3;1
+61;"Bellandur EcoSpace";12.9357;77.692;3;1
+62;"Bellandur Outer Ring Rd";12.9354;77.6917;7;2
+63;"Bellandur Central Mall";12.936;77.6923;6;2
+64;"Green Glen Layout";12.9352;77.6915;0;9
+65;"Bellandur Ibblur Junction";12.9356;77.6921;4;5
+66;"Marathahalli Bridge";12.9571;77.701;1;5
+67;"Marathahalli Kalamandir";12.9568;77.7008;10;5
+68;"Marathahalli Munnekolala";12.9573;77.7013;10;6
+69;"Marathahalli AECS Layout";12.9565;77.7005;1;5
+70;"Marathahalli Innovative Multiplex";12.957;77.7011;1;0
+71;"BTM 1st Stage";12.9168;77.6102;2;5
+72;"BTM 2nd Stage";12.9165;77.61;3;8
+73;"BTM Water Tank";12.917;77.6105;3;4
+74;"BTM Madiwala";12.9162;77.6098;3;4
+75;"BTM Ganesha Temple";12.9167;77.6103;10;10
+76;"Basavanagudi Gandhi Bazaar";12.9438;77.5836;5;9
+77;"Basavanagudi Bull Temple";12.9435;77.5833;5;2
+78;"Basavanagudi National College";12.944;77.5838;6;5
+79;"Basavanagudi Sajjan Rao Circle";12.9432;77.5831;9;1
+80;"Basavanagudi DVG Road";12.9437;77.5837;5;0
+81;"Ulsoor Lake";12.985;77.619;3;4
+82;"Ulsoor Metro";12.9847;77.6188;2;8
+83;"Ulsoor Bazaar Street";12.9852;77.6193;5;1
+84;"Ulsoor RBANMS Grounds";12.9845;77.6185;6;5
+85;"Ulsoor Cambridge Layout";12.9849;77.6191;8;8
+86;"RT Nagar Main Road";13.017;77.605;9;4
+87;"RT Nagar 1st Block";13.0167;77.6047;3;2
+88;"RT Nagar CBI Road";13.0172;77.6052;9;8
+89;"RT Nagar Coffee Board Layout";13.0165;77.6045;5;0
+90;"RT Nagar Post Office";13.0169;77.6049;1;1
+91;"Kalyan Nagar HRBR Layout";13.0248;77.6427;10;9
+92;"Kalyan Nagar Banaswadi Main Rd";13.0245;77.6424;9;2
+93;"Kalyan Nagar 5th Block";13.025;77.6429;3;8
+94;"Kalyan Nagar Geddalahalli";13.0243;77.6422;3;1
+95;"Kalyan Nagar Church Road";13.0247;77.6426;3;9
+96;"Vijayanagar Tollgate";12.9807;77.5395;8;7
+97;"Vijayanagar Maruthi Mandir";12.9804;77.5392;5;7
+98;"Vijayanagar Chord Road";12.9809;77.5398;0;8
+99;"Vijayanagar 1st Main";12.9802;77.539;1;9
+100;"Vijayanagar Temple Street";12.9806;77.5396;1;9
