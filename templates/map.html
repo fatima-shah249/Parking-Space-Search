@@ -97,7 +97,7 @@
 
 <script>
   /* ---------- Razorpay ---------- */
-  const selectedSlotId = parseInt("{{ selected_zone.slot_id }}");  // 👈 inject from Flask
+  const selectedSlotId = parseInt("{{ selected_zone.slot_id }}");  // injected from Flask
 
   function proceedToPay() {
     const selectedVehicle = document.querySelector('input[name="vehicleType"]:checked').value;
@@ -121,31 +121,20 @@
           handler: function (response) {
             alert("Payment Successful: " + response.razorpay_payment_id);
 
-            // Call backend to reduce available slots
-            fetch(`/api/slots/${slotId}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                location: "New Place",
-                latitude: 12.34,
-                longitude: 56.78,
-                available_slots: 20,
-                occupied_slots: 5
-              })
+            // Call backend to book the slot
+            fetch(`/api/book_slot/${selectedSlotId}`, {
+              method: "POST"
             })
-
-
-              .then(res => res.json())
-              .then(data => {
-                console.log("Slot booking response:", data);
-                if (data.message) {
-                  alert("Slot booked successfully!");
-                  location.reload(); // Refresh UI to show updated slots
-                } else {
-                  alert("Error: " + data.error);
-                }
-              })
-              .catch(err => console.error("Error booking slot:", err));
+            .then(res => res.json())
+            .then(data => {
+              if (data.message) {
+                alert("Slot booked successfully!");
+                location.reload();
+              } else {
+                alert("Error: " + data.error);
+              }
+            })
+            .catch(err => console.error("Error booking slot:", err));
           },
           theme: { color: "#3399cc" }
         };
@@ -172,7 +161,6 @@
   vehicleRadios.forEach(r => r.addEventListener('change', updateTotal));
 
   /* ---------- Map + Live Tracking ---------- */
-  // Initial coords from backend; if not available, set to null and fetch ASAP
   let currLat = parseFloat('{{ user_lat }}');
   let currLng = parseFloat('{{ user_lng }}');
   const destLat = parseFloat('{{ dest_lat }}');
@@ -181,7 +169,6 @@
   let map, userMarker, routingControl;
 
   function initMap() {
-    // If we don't have initial user coords, center on destination temporarily
     const startLatLng = (isFinite(currLat) && isFinite(currLng))
       ? [currLat, currLng]
       : [destLat, destLng];
@@ -204,12 +191,10 @@
       iconAnchor: [16, 32]
     });
 
-    // Destination marker
     const destMarker = L.marker([destLat, destLng], { icon: destIcon })
       .addTo(map)
       .bindPopup("Parking Zone");
 
-    // User marker (only if we have initial coords)
     if (isFinite(currLat) && isFinite(currLng)) {
       userMarker = L.marker([currLat, currLng], { icon: userIcon })
         .addTo(map)
@@ -217,8 +202,7 @@
       drawRoute([currLat, currLng], [destLat, destLng]);
       fitBoundsToMarkers(userMarker, destMarker);
     } else {
-      // No user position yet — we’ll place marker after first fetch
-      userMarker = L.marker([destLat, destLng], { icon: userIcon, opacity: 0 }) // hidden for now
+      userMarker = L.marker([destLat, destLng], { icon: userIcon, opacity: 0 })
         .addTo(map);
     }
   }
@@ -251,7 +235,6 @@
 
         currLat = lat; currLng = lng;
 
-        // First-time placement if hidden
         if (userMarker && userMarker.options.opacity === 0) {
           userMarker.setOpacity(1);
           userMarker.setLatLng([currLat, currLng]);
@@ -260,16 +243,14 @@
           return;
         }
 
-        // Smooth-ish movement
         if (userMarker) userMarker.setLatLng([currLat, currLng]);
         drawRoute([currLat, currLng], [destLat, destLng]);
       })
       .catch(err => console.error("Error fetching latest location:", err));
   }
 
-  /* Kickoff */
   initMap();
-  fetchLatestLocation();                 // try immediately
-  setInterval(fetchLatestLocation, 30000); // then every 30s
+  fetchLatestLocation();
+  setInterval(fetchLatestLocation, 30000);
 </script>
 {% endblock %}

@@ -1,74 +1,79 @@
 import datetime
 import os
-from flask import Flask, render_template, redirect, request, jsonify, session, url_for, flash,send_from_directory
+import pandas as pd
+from flask import Flask, render_template, redirect, request, jsonify, session, url_for, flash, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import create_engine, text, exc
+from sqlalchemy import text, exc
 import razorpay
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-import pandas as pd
 
 # --- Flask App Setup ---
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'a-default-local-secret-key')
 
-# --- Database URI ---
-# Use cloud DB if DATABASE_URL env var is set, else fallback to local SQLite
+# --- Database Setup ---
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///local.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# NEW: Configuration for file uploads
+db = SQLAlchemy(app)
 
-UPLOAD_FOLDER = os.path.join('static', 'uploads')   
+# --- File Uploads ---
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf'}
-
 
 # --- Razorpay Setup ---
 RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID')
 RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET')
-client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+client = None
+if RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET:
+    client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+else:
+    app.logger.warning("⚠️ Razorpay keys missing; payment routes will not work.")
 
+# ===================================================================
+# --- CSV Import Helper (runs only if enabled) ---
+# ===================================================================
+def import_csvs_if_needed():
+    base_dir = os.path.join(os.path.dirname(__file__), "static", "data")
+    csv_mappings = {
+        "location_of_slots.csv": "location_of_slots",
+        "user_applications.csv": "user_applications",
+        "user_concerns.csv": "user_concerns"
+    }
 
-# Initialize DB
-db = SQLAlchemy(app)
+    for file_name, table_name in csv_mappings.items():
+        file_path = os.path.join(base_dir, file_name)
+        if not os.path.exists(file_path):
+            app.logger.info(f"CSV {file_name} not found — skipping {table_name}")
+            continue
 
-DATABASE_URL = os.environ.get('DATABASE_URL')
-engine = create_engine(DATABASE_URL)
+        try:
+            count = db.session.execute(text(f"SELECT COUNT(1) FROM {table_name}")).scalar()
+            if count and int(count) > 0:
+                app.logger.info(f"{table_name} already has {count} rows — skipping import.")
+                continue
 
-# 3️⃣ Path to your CSV files
-base_dir = os.path.join(os.path.dirname(__file__), "static", "data")
+            df = pd.read_csv(file_path, encoding="latin1")
+            df.to_sql(table_name, db.engine, if_exists="append", index=False)
+            app.logger.info(f"✅ Imported {len(df)} rows into {table_name}")
+        except Exception as e:
+            app.logger.exception(f"❌ Failed to import {file_name}: {e}")
+            db.session.rollback()
 
-# 4️⃣ Import CSVs into PostgreSQL
-csv_mappings = {
-    "location_of_slots.csv": "location_of_slots",
-    "user_applications.csv": "user_applications",
-    "user_concerns.csv": "user_concerns"
-}
-
-for file_name, table_name in csv_mappings.items():
-    file_path = os.path.join(base_dir, file_name)
-    print(f"Importing {file_name} into table {table_name}...")
-    df = pd.read_csv(file_path, encoding='latin1')  # use latin1 if utf-8 fails
-    df.to_sql(table_name, engine, if_exists='append', index=False)
-    print(f"{table_name} imported successfully!")
-
-# --- Global variables for dynamic location ---
-esp_lat = None
-esp_lng = None
-nearby_zones = []
-
-# --- Helper Function ---
+# ===================================================================
+# --- Helper Functions ---
+# ===================================================================
 def allowed_file(filename):
-    """Checks if the uploaded file has an allowed extension."""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Route to serve uploaded files
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-
+# ===================================================================
 # --- Database Models ---
+# ===================================================================
 class Location_of_slots(db.Model):
     __tablename__ = 'location_of_slots'
     slot_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -87,14 +92,12 @@ class UserConcerns(db.Model):
 
 class UserApplication(db.Model):
     __tablename__ = 'user_applications'
-
-    # --- User Login Details ---
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
-    
-    # --- Application Details (nullable until submitted) ---
+
+    # --- Application Details ---
     owner_name = db.Column(db.String(255), nullable=True)
     phone = db.Column(db.String(20), nullable=True)
     address = db.Column(db.String(255), nullable=True)
@@ -110,8 +113,7 @@ class UserApplication(db.Model):
     submission_date = db.Column(db.DateTime, nullable=True)
 
     def __repr__(self):
-        return f'<UserApplication {self.id} by {self.username}>'
-
+        return f"<UserApplication {self.id} by {self.username}>"
 # ===================================================================
 # ▼▼▼ CIVILIAN USER ROUTES ▼▼▼
 # ===================================================================
@@ -134,7 +136,12 @@ def Civilian_Signup():
         hashed_password = generate_password_hash(password)
         new_user = UserApplication(email=email, username=username, password=hashed_password)
         db.session.add(new_user)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            app.logger.exception("DB commit failed: %s", e)
+            flash("Internal error. Please try again.", "error")
 
         flash("Account created successfully! Please login.", "success")
         return redirect(url_for("Civilian_login"))
@@ -227,7 +234,12 @@ def submit_parking_zone():
                 user_application.status = 'pending'
                 user_application.submission_date = datetime.datetime.utcnow()
                 
-                db.session.commit()
+                try:
+                    db.session.commit()
+                except Exception as e:
+                    db.session.rollback()
+                    app.logger.exception("DB commit failed: %s", e)
+                    flash("Internal error. Please try again.", "error")
 
                 flash('Your application has been submitted successfully!', 'success')
                 return redirect(url_for('Civilian_home'))
@@ -258,7 +270,12 @@ def handle_application(app_id, action):
         flash('Invalid action', 'error')
         return redirect(url_for('applications'))
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        app.logger.exception("DB commit failed: %s", e)
+        flash("Internal error. Please try again.", "error")
     flash(f"Application {action}d successfully!", 'success')
     return redirect(url_for('applications'))
 
@@ -302,61 +319,100 @@ def create_order():
         "vehicle": payment_type
     })
 
+from flask import Flask, render_template, request, redirect, url_for, flash
+from sqlalchemy import text
+from your_app import db  # Make sure your db object is imported correctly
+
 @app.route('/User', methods=['GET', 'POST'])
 def User():
     global esp_lat, esp_lng, nearby_zones
-    esp_lat=12.90732
-    esp_lng=77.60590
-    curr_lat = esp_lat  
-    curr_lng = esp_lng
-    radius_km = 0   
+    esp_lat, esp_lng = 12.90732, 77.60590
+    curr_lat, curr_lng = esp_lat, esp_lng
+    radius_km = None
     nearby_slots = []
+
     if request.method == 'POST':
         radius_input = request.form.get('radius')
-        if radius_input :
+        if radius_input:
             try:
                 radius_m = float(radius_input)
                 if radius_m <= 0:
                     flash("Radius must be positive.", "error")
                     return redirect(url_for("User"))
-                radius_km = radius_m / 1000.0
+
+                radius_km = radius_m / 1000.0  # convert meters to km
+
+                # PostgreSQL-compatible query using a subquery to filter by distance
                 query = """
-                    SELECT slot_id, location, latitude, longitude, available_slots, occupied_slots,
-                            (6371 * ACOS(COS(RADIANS(:lat)) * COS(RADIANS(latitude)) *
-                            COS(RADIANS(longitude) - RADIANS(:lng)) +
-                            SIN(RADIANS(:lat)) * SIN(RADIANS(latitude)))) AS distance_m
-                    FROM location_of_slots
-                    HAVING distance_m < :radius_km
-                    ORDER BY distance_m ASC
+                    SELECT *
+                    FROM (
+                        SELECT slot_id, location, latitude, longitude, available_slots, occupied_slots,
+                               (6371 * ACOS(
+                                   LEAST(1.0, COS(RADIANS(:lat)) * COS(RADIANS(latitude)) *
+                                   COS(RADIANS(longitude) - RADIANS(:lng)) +
+                                   SIN(RADIANS(:lat)) * SIN(RADIANS(latitude)))
+                               )) AS distance_km
+                        FROM location_of_slots
+                    ) AS sub
+                    WHERE distance_km < :radius_km
+                    ORDER BY distance_km ASC;
                 """
-                result = db.session.execute(text(query), {
-                    "lat": curr_lat,
-                    "lng": curr_lng,
-                    "radius_km": radius_km
-                })
+
+                result = db.session.execute(
+                    text(query),
+                    {"lat": curr_lat, "lng": curr_lng, "radius_km": radius_km}
+                )
                 nearby_slots = result.fetchall()
                 nearby_zones = nearby_slots
+
+                if not nearby_slots:
+                    flash("No slots found within this radius.", "info")
+
             except ValueError:
                 flash("Invalid radius value.", "error")
-    return render_template('User.html', slots=nearby_slots, lat=curr_lat, lng=curr_lng, radius_km=radius_km*1000)
+            except Exception as e:
+                flash(f"Error fetching nearby slots: {e}", "error")
+
+    return render_template(
+        'User.html',
+        slots=nearby_slots,
+        lat=curr_lat,
+        lng=curr_lng,
+        radius_km=(radius_km * 1000 if radius_km else None)
+    )
 
 @app.route('/map')
 def map_view():
-    dest_lat = request.args.get('lat')
-    dest_lng = request.args.get('lng')
-    zone_id = request.args.get('zone_id')
-    zone = Location_of_slots.query.get_or_404(zone_id)
-    city_rates = {'car': 40, 'bike': 20}
-    esp_lat=12.90732
-    esp_lng=77.60590
-    return render_template('map.html',
-                           dest_lat=dest_lat,
-                           dest_lng=dest_lng,
-                           user_lat=esp_lat,
-                           user_lng=esp_lng,
-                           slots=nearby_zones,
-                           selected_zone=zone,
-                           city_rates=city_rates)
+    try:
+        # Convert query params to float/int
+        dest_lat = float(request.args.get('lat', 0))
+        dest_lng = float(request.args.get('lng', 0))
+        zone_id = int(request.args.get('zone_id', 0))
+
+        # Get the selected parking zone
+        zone = Location_of_slots.query.get_or_404(zone_id)
+
+        # Example city rates
+        city_rates = {'car': 40, 'bike': 20}
+
+        # User location (temporary fixed coordinates)
+        esp_lat = 12.90732
+        esp_lng = 77.60590
+
+        return render_template(
+            'map.html',
+            dest_lat=dest_lat,
+            dest_lng=dest_lng,
+            user_lat=esp_lat,
+            user_lng=esp_lng,
+            slots=nearby_zones,          # consider passing only relevant slots
+            selected_zone=zone,
+            city_rates=city_rates
+        )
+    except Exception as e:
+        flash(f"Error loading map: {e}", "error")
+        return redirect(url_for("User"))
+
 
 @app.route("/contact", methods=["GET", "POST"])
 def contact():
@@ -366,7 +422,12 @@ def contact():
         if user_email and message:
             new_concern = UserConcerns(user_email=user_email, message=message)
             db.session.add(new_concern)
-            db.session.commit()
+            try:
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                app.logger.exception("DB commit failed: %s", e)
+                flash("Internal error. Please try again.", "error")
             flash("Your message has been sent successfully!", "success")
             return redirect(url_for("contact"))
         else:
@@ -454,7 +515,12 @@ def create_slot():
             occupied_slots=int(data['occupied_slots'])
         )
         db.session.add(new_slot)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            app.logger.exception("DB commit failed: %s", e)
+            flash("Internal error. Please try again.", "error")
         return jsonify({'message': 'Slot created successfully', 'slot_id': new_slot.slot_id}), 201
     except Exception as e:
         db.session.rollback()
@@ -471,7 +537,12 @@ def update_slot(slot_id):
     slot.longitude = float(data.get('longitude', slot.longitude))
     slot.available_slots = int(data.get('available_slots', slot.available_slots))
     slot.occupied_slots = int(data.get('occupied_slots', slot.occupied_slots))
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        app.logger.exception("DB commit failed: %s", e)
+        flash("Internal error. Please try again.", "error")
     return jsonify({'message': 'Slot updated successfully'})
 
 @app.route('/api/slots/<int:slot_id>', methods=['DELETE'])
@@ -480,7 +551,12 @@ def delete_slot(slot_id):
         return jsonify({'error': 'Unauthorized'}), 401
     slot = Location_of_slots.query.get_or_404(slot_id)
     db.session.delete(slot)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        app.logger.exception("DB commit failed: %s", e)
+        flash("Internal error. Please try again.", "error")
     return jsonify({'message': 'Slot deleted successfully'})
 
 @app.route('/admin/concerns')
@@ -496,14 +572,19 @@ def book_slot(slot_id):
     if slot.available_slots > 0:
         slot.available_slots -= 1
         slot.occupied_slots += 1
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            app.logger.exception("DB commit failed: %s", e)
+            flash("Internal error. Please try again.", "error")
         return jsonify({'message': 'Slot booked successfully'})
     else:
         return jsonify({'error': 'No available slots'}), 400
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()
+        db.create_all()  # ensures tables exist
     if not os.path.exists(UPLOAD_FOLDER):
         os.makedirs(UPLOAD_FOLDER)
     port = int(os.environ.get("PORT", 5000))
