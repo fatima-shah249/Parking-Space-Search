@@ -319,10 +319,6 @@ def create_order():
         "vehicle": payment_type
     })
 
-from flask import Flask, render_template, request, redirect, url_for, flash
-from sqlalchemy import text
-from your_app import db  # Make sure your db object is imported correctly
-
 @app.route('/User', methods=['GET', 'POST'])
 def User():
     global esp_lat, esp_lng, nearby_zones
