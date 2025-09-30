@@ -7,6 +7,8 @@ from sqlalchemy import text, exc
 import razorpay
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+# from main import app, db
+# import logging
 
 # --- Flask App Setup ---
 app = Flask(__name__)
@@ -584,5 +586,5 @@ if __name__ == '__main__':
     if not os.path.exists(UPLOAD_FOLDER):
         os.makedirs(UPLOAD_FOLDER)
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port)  
 
