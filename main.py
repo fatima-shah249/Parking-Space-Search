@@ -322,168 +322,184 @@ def create_order():
         "vehicle": payment_type
     })
 
-esp_lat, esp_lng = 12.90732, 77.60590
-# location finding 
-geolocator = Nominatim(user_agent="ParkingFinderApp_vinay_2025")
+# esp_lat, esp_lng = 12.90732, 77.60590
+# # location finding 
+# geolocator = Nominatim(user_agent="ParkingFinderApp_vinay_2025")
 
-# Coordinates
-latitude = esp_lat
-longitude = esp_lng
+# # Coordinates
+# latitude = esp_lat
+# longitude = esp_lng
 
-# Reverse geocode
-location_obj = geolocator.reverse((latitude, longitude), language='en')
-User_location = location_obj.address if location_obj else "Location not found"
+# # Reverse geocode
+# location_obj = geolocator.reverse((latitude, longitude), language='en')
+# User_location = location_obj.address if location_obj else "Location not found"
 
-@app.route('/User', methods=['GET', 'POST'])
-def User():
-    global esp_lat, esp_lng, nearby_zones
-    esp_lat, esp_lng = 12.90732, 77.60590
-    curr_lat, curr_lng = esp_lat, esp_lng
-    radius_km = None
-    nearby_slots = []
+# @app.route('/User', methods=['GET', 'POST'])
+# def User():
+#     global esp_lat, esp_lng, nearby_zones
+#     esp_lat, esp_lng = 12.90732, 77.60590
+#     curr_lat, curr_lng = esp_lat, esp_lng
+#     radius_km = None
+#     nearby_slots = []
 
-    if request.method == 'POST':
-        radius_input = request.form.get('radius')
-        if radius_input:
-            try:
-                radius_m = float(radius_input)
-                if radius_m <= 0:
-                    flash("Radius must be positive.", "error")
-                    return redirect(url_for("User"))
+#     if request.method == 'POST':
+#         radius_input = request.form.get('radius')
+#         if radius_input:
+#             try:
+#                 radius_m = float(radius_input)
+#                 if radius_m <= 0:
+#                     flash("Radius must be positive.", "error")
+#                     return redirect(url_for("User"))
 
-                radius_km = radius_m / 1000.0  # convert meters to km
+#                 radius_km = radius_m / 1000.0  # convert meters to km
 
-                # PostgreSQL-compatible query using a subquery to filter by distance
-                query = """
-                    SELECT *
-                    FROM (
-                        SELECT slot_id, location, latitude, longitude, available_slots, occupied_slots,
-                               (6371 * ACOS(
-                                   LEAST(1.0, COS(RADIANS(:lat)) * COS(RADIANS(latitude)) *
-                                   COS(RADIANS(longitude) - RADIANS(:lng)) +
-                                   SIN(RADIANS(:lat)) * SIN(RADIANS(latitude)))
-                               )) AS distance_km
-                        FROM location_of_slots
-                    ) AS sub
-                    WHERE distance_km < :radius_km
-                    ORDER BY distance_km ASC;
-                """
+#                 # PostgreSQL-compatible query using a subquery to filter by distance
+#                 query = """
+#                     SELECT *
+#                     FROM (
+#                         SELECT slot_id, location, latitude, longitude, available_slots, occupied_slots,
+#                                (6371 * ACOS(
+#                                    LEAST(1.0, COS(RADIANS(:lat)) * COS(RADIANS(latitude)) *
+#                                    COS(RADIANS(longitude) - RADIANS(:lng)) +
+#                                    SIN(RADIANS(:lat)) * SIN(RADIANS(latitude)))
+#                                )) AS distance_km
+#                         FROM location_of_slots
+#                     ) AS sub
+#                     WHERE distance_km < :radius_km
+#                     ORDER BY distance_km ASC;
+#                 """
 
-                result = db.session.execute(
-                    text(query),
-                    {"lat": curr_lat, "lng": curr_lng, "radius_km": radius_km}
-                )
-                nearby_slots = result.fetchall()
-                nearby_zones = nearby_slots
+#                 result = db.session.execute(
+#                     text(query),
+#                     {"lat": curr_lat, "lng": curr_lng, "radius_km": radius_km}
+#                 )
+#                 nearby_slots = result.fetchall()
+#                 nearby_zones = nearby_slots
 
-                if not nearby_slots:
-                    flash("No slots found within this radius.", "info")
+#                 if not nearby_slots:
+#                     flash("No slots found within this radius.", "info")
 
-            except ValueError:
-                flash("Invalid radius value.", "error")
-            except Exception as e:
-                flash(f"Error fetching nearby slots: {e}", "error")
+#             except ValueError:
+#                 flash("Invalid radius value.", "error")
+#             except Exception as e:
+#                 flash(f"Error fetching nearby slots: {e}", "error")
 
-    return render_template(
-        'User.html',
-        slots=nearby_slots,
-        lat=curr_lat,
-        lng=curr_lng,
-        radius_km=(radius_km * 1000 if radius_km else None),User_location=User_location
-    )
+#     return render_template(
+#         'User.html',
+#         slots=nearby_slots,
+#         lat=curr_lat,
+#         lng=curr_lng,
+#         radius_km=(radius_km * 1000 if radius_km else None),User_location=User_location
+#     )
 
-@app.route('/map')
-def map_view():
-    try:
-        # Convert query params to float/int
-        dest_lat = float(request.args.get('lat', 0))
-        dest_lng = float(request.args.get('lng', 0))
-        zone_id = int(request.args.get('zone_id', 0))
+# @app.route('/map')
+# def map_view():
+#     try:
+#         # Convert query params to float/int
+#         dest_lat = float(request.args.get('lat', 0))
+#         dest_lng = float(request.args.get('lng', 0))
+#         zone_id = int(request.args.get('zone_id', 0))
 
-        # Get the selected parking zone
-        zone = Location_of_slots.query.get_or_404(zone_id)
+#         # Get the selected parking zone
+#         zone = Location_of_slots.query.get_or_404(zone_id)
 
-        # Example city rates
-        city_rates = {'car': 40, 'bike': 20}
+#         # Example city rates
+#         city_rates = {'car': 40, 'bike': 20}
 
-        # User location (temporary fixed coordinates)
-        esp_lat = 12.90732
-        esp_lng = 77.60590
+#         # User location (temporary fixed coordinates)
+#         esp_lat = 12.90732
+#         esp_lng = 77.60590
 
-        return render_template(
-            'map.html',
-            dest_lat=dest_lat,
-            dest_lng=dest_lng,
-            user_lat=esp_lat,
-            user_lng=esp_lng,
-            slots=nearby_zones,          # consider passing only relevant slots
-            selected_zone=zone,
-            city_rates=city_rates
-        )
-    except Exception as e:
-        flash(f"Error loading map: {e}", "error")
-        return redirect(url_for("User"))
+#         return render_template(
+#             'map.html',
+#             dest_lat=dest_lat,
+#             dest_lng=dest_lng,
+#             user_lat=esp_lat,
+#             user_lng=esp_lng,
+#             slots=nearby_zones,          # consider passing only relevant slots
+#             selected_zone=zone,
+#             city_rates=city_rates
+#         )
+#     except Exception as e:
+#         flash(f"Error loading map: {e}", "error")
+#         return redirect(url_for("User"))
 
 @app.route('/Driver', methods=['GET', 'POST'])
 def Driver():
-    global esp_lat, esp_lng, nearby_zones
-    esp_lat, esp_lng = 12.90732, 77.60590  # ESP32 coordinates
-    curr_lat, curr_lng = esp_lat, esp_lng
-    radius_km = 2  # 2 km default radius
-    nearby_slots = []
-    User_location = "Unknown Location"
+    # --- Configuration ---
+    # It's better to get these from a config file or environment variables
+    # For now, we'll use the hardcoded values.
+    # IMPORTANT: Do NOT commit real API keys to your code.
+    GMAPS_API_KEY = os.environ.get("GMAPS_API_KEY", "YOUR_FALLBACK_API_KEY_HERE")
+    
+    # Static coordinates for the user's location (e.g., from an ESP32)
+    user_lat, user_lng = 12.90732, 77.60590
+    
+    # Default search radius in kilometers
+    default_radius_km = 2.0
+    
+    # --- Initialization ---
+    nearby_slots_data = []
+    user_location_address = "Location not available"
 
-    # ✅ Reverse Geocode using Nominatim safely
+    # --- Geocoding: Get user's address from coordinates ---
     try:
-        geolocator = Nominatim(user_agent="parking_locator_app_v1 (contact: your_email@example.com)")
-        location_obj = geolocator.reverse((curr_lat, curr_lng), language='en')
+        # It's good practice to set a user_agent
+        geolocator = Nominatim(user_agent="smart_parking_app/1.0")
+        location_obj = geolocator.reverse((user_lat, user_lng), language='en')
+        
         if location_obj and location_obj.address:
-            full_address = location_obj.address
-            address_parts = full_address.split(",")
-            # Take only first 5 parts for clean output
-            short_address = ", ".join(address_parts[:5])
-            User_location = short_address.strip()
+            # Create a shorter, more readable address
+            address_parts = location_obj.address.split(",")
+            user_location_address = ", ".join(part.strip() for part in address_parts[:4])
         else:
-            User_location = "Address not found"
+            user_location_address = "Address not found for coordinates"
+            
     except Exception as e:
-        print(f"Nominatim error: {e}")
-        User_location = "Unable to fetch location"
+        app.logger.error(f"Geocoding (Nominatim) error: {e}")
+        user_location_address = "Error fetching address"
 
-    # ✅ Fetch nearby zones (within 2 km)
+    # --- Database Query: Find nearby parking slots ---
     try:
-        query = """
-            SELECT *
-            FROM (
-                SELECT slot_id, location, latitude, longitude, available_slots, occupied_slots,
-                       (6371 * ACOS(
-                           LEAST(1.0, COS(RADIANS(:lat)) * COS(RADIANS(latitude)) *
-                           COS(RADIANS(longitude) - RADIANS(:lng)) +
-                           SIN(RADIANS(:lat)) * SIN(RADIANS(latitude)))
-                       )) AS distance_km
-                FROM location_of_slots
-            ) AS sub
-            WHERE distance_km <= :radius_km
-            ORDER BY distance_km ASC;
-        """
+        # This SQL query uses the Haversine formula to calculate distances
+        query = text("""
+            SELECT 
+                slot_id, location, latitude, longitude, available_slots, occupied_slots,
+                (6371 * ACOS(
+                    LEAST(1.0, -- Clamp value to 1.0 to avoid domain errors
+                        COS(RADIANS(:lat)) * COS(RADIANS(latitude)) *
+                        COS(RADIANS(longitude) - RADIANS(:lng)) +
+                        SIN(RADIANS(:lat)) * SIN(RADIANS(latitude))
+                    )
+                )) AS distance_km
+            FROM 
+                location_of_slots
+            HAVING 
+                distance_km <= :radius_km
+            ORDER BY 
+                distance_km ASC;
+        """)
 
         result = db.session.execute(
-            text(query),
-            {"lat": curr_lat, "lng": curr_lng, "radius_km": radius_km}
+            query,
+            {"lat": user_lat, "lng": user_lng, "radius_km": default_radius_km}
         )
-        nearby_slots = result.fetchall()
-        nearby_zones = nearby_slots
+        
+        # ✅ FIX: Convert the query result into a list of dictionaries
+        # This makes it serializable for the template's 'tojson' filter.
+        nearby_slots_data = [dict(row._mapping) for row in result]
 
     except Exception as e:
-        flash(f"Error fetching nearby slots: {e}", "error")
-        nearby_slots = []
+        app.logger.error(f"Database error while fetching nearby slots: {e}")
+        flash("Could not retrieve parking locations due to a server error.", "error")
 
+    # --- Render Template ---
     return render_template(
         'Driver.html',
-        slots=nearby_slots,
-        lat=curr_lat,
-        lng=curr_lng,
-        radius_km=radius_km * 1000,  # show in meters
-        User_location=User_location,
+        slots=nearby_slots_data,
+        lat=user_lat,
+        lng=user_lng,
+        User_location=user_location_address,
         api_key="AIzaSyAqyzQZLE0TvmXnqNcII65Edvu71PV-HCI"
     )
 
