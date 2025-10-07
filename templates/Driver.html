@@ -4,14 +4,13 @@
 {% block content %}
 <div class="bg-white rounded-xl shadow-md p-6 mb-6">
     <h1 class="text-3xl font-bold text-gray-900 mb-2 text-center">Nearby Parking Zones</h1>
-    <p class="text-gray-600 text-center mb-4">Showing zones within 2 km from your current location</p>
+    <p class="text-gray-600 text-center mb-4">Click any parking icon to get directions</p>
     <div class="text-center bg-gray-100 p-4 rounded-lg shadow">
-        <strong class="text-gray-800">📍 Current Location:</strong>
+        <strong class="text-gray-800">📍 Your Current Location:</strong>
         <p class="text-gray-600 mt-1">{{ User_location }}</p>
     </div>
 </div>
 
-<!-- Google Map -->
 <div id="map" class="w-full h-[600px] rounded-xl shadow-md"></div>
 
 <script>
@@ -23,30 +22,41 @@ function initMap() {
         zoom: 14,
     });
 
-    // Blue marker for user
+    // --- User's Location Marker ---
     new google.maps.Marker({
         position: userLocation,
         map,
         title: "You are here",
         icon: {
-            url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+            url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png" // A distinct blue marker for the user
         }
     });
 
-    // Add nearby parking markers
+    // --- Parking Zone Markers ---
     const nearbySlots = {{ slots|tojson }};
+    
     nearbySlots.forEach(slot => {
-        new google.maps.Marker({
-            position: { lat: parseFloat(slot.latitude), lng: parseFloat(slot.longitude) },
+        const slotPosition = { lat: parseFloat(slot.latitude), lng: parseFloat(slot.longitude) };
+
+        // Create a marker for each parking slot
+        const marker = new google.maps.Marker({
+            position: slotPosition,
             map,
-            title: `${slot.location} - Available: ${slot.available_slots}`,
-            icon: "http://maps.google.com/mapfiles/ms/icons/red-dot.png"
+            title: `${slot.location}\nAvailable: ${slot.available_slots}\nClick for directions`,
+        });
+
+        // ✅ ADDED: Click listener for each marker
+        marker.addListener("click", () => {
+            // Construct the Google Maps directions URL
+            const directionsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${slotPosition.lat},${slotPosition.lng}`;
+            
+            // Open the URL in a new tab
+            window.open(directionsUrl, "_blank");
         });
     });
 }
 </script>
 
-<!-- Load Google Maps -->
 <script async defer
     src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}&callback=initMap">
 </script>
