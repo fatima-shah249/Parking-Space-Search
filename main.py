@@ -461,20 +461,23 @@ def Driver():
 
     # --- Database Query: Find nearby parking slots ---
     try:
-        # This SQL query uses the Haversine formula to calculate distances
+        # ✅ FIX: This query uses a subquery to allow filtering by the 'distance_km' alias.
+        # This is the standard and correct way to do this in PostgreSQL.
         query = text("""
-            SELECT 
-                slot_id, location, latitude, longitude, available_slots, occupied_slots,
-                (6371 * ACOS(
-                    LEAST(1.0, -- Clamp value to 1.0 to avoid domain errors
-                        COS(RADIANS(:lat)) * COS(RADIANS(latitude)) *
-                        COS(RADIANS(longitude) - RADIANS(:lng)) +
-                        SIN(RADIANS(:lat)) * SIN(RADIANS(latitude))
-                    )
-                )) AS distance_km
-            FROM 
-                location_of_slots
-            HAVING 
+            SELECT * FROM (
+                SELECT 
+                    slot_id, location, latitude, longitude, available_slots, occupied_slots,
+                    (6371 * ACOS(
+                        LEAST(1.0, -- Clamp value to 1.0 to avoid domain errors
+                            COS(RADIANS(:lat)) * COS(RADIANS(latitude)) *
+                            COS(RADIANS(longitude) - RADIANS(:lng)) +
+                            SIN(RADIANS(:lat)) * SIN(RADIANS(latitude))
+                        )
+                    )) AS distance_km
+                FROM 
+                    location_of_slots
+            ) AS calculated_distances
+            WHERE 
                 distance_km <= :radius_km
             ORDER BY 
                 distance_km ASC;
@@ -485,8 +488,7 @@ def Driver():
             {"lat": user_lat, "lng": user_lng, "radius_km": default_radius_km}
         )
         
-        # ✅ FIX: Convert the query result into a list of dictionaries
-        # This makes it serializable for the template's 'tojson' filter.
+        # This part remains the same
         nearby_slots_data = [dict(row._mapping) for row in result]
 
     except Exception as e:
