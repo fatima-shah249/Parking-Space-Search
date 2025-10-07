@@ -13,6 +13,14 @@
     <p class="text-blue-600 font-medium mb-6">
         💡 Tip: Enter a smaller radius for quicker results or a larger one to explore more options.
     </p>
+    <div class="p-4 bg-gray-100 rounded-lg shadow-md">
+        <h3 class="text-lg font-semibold text-gray-800">Your Current Location</h3>
+        <p class="text-gray-600 mt-2">
+    {{ User_location.split(',')[:3]|join(', ') }}
+</p>
+
+    </div>
+
     <form method="POST" class="flex flex-col sm:flex-row justify-center items-center gap-4">
         <div class="flex items-center gap-2">
             <label for="radius" class="text-lg font-medium">Distance (in m):</label>
@@ -59,7 +67,7 @@
     </div>
     {% elif radius_km is not none %}
     <div class="text-center bg-white rounded-xl shadow-md p-8">
-        <p class="text-lg text-gray-600">No nearby slots found within {{ "%.0f"|format(radius_km ) }} m.</p>
+        <p class="text-lg text-gray-600">No nearby Zones found within {{ "%.0f"|format(radius_km ) }} m.</p>
     </div>
     {% endif %}
 

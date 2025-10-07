@@ -60,3 +60,62 @@ body {
     color: black;
     font-size:18px;
 }
+/* ======================================= */
+/* DEFAULT STYLES (Mobile First - Applies to ALL screens) */
+/* ======================================= */
+body {
+    font-size: 16px; /* Default size */
+}
+
+.main-content {
+    width: 95%; /* Make content slightly less wide */
+}
+
+h1 {
+    font-size: 2em; /* Default large heading */
+}
+
+/* ======================================= */
+/* MEDIA QUERY FOR PHONES (max-width: 768px) */
+/* ======================================= */
+/* These rules ONLY apply when the screen width is 768px or less. */
+@media (max-width: 768px) {
+    
+    /* 1. Reduce padding/margin to save space */
+    .header, .footer {
+        padding: 10px;
+    }
+
+    /* 2. Reduce font sizes */
+    h1 {
+        font-size: 1.5em; /* Smaller headings on phone */
+    }
+    
+    /* 3. Make navigation stack vertically */
+    .nav-links {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* 4. Make images/elements full width */
+    .image-gallery img, .content-box {
+        width: 100%; /* Ensure elements fill the narrow screen */
+        float: none; /* Remove floating if used */
+    }
+}
+
+/* ======================================= */
+/* MEDIA QUERY FOR VERY SMALL PHONES (max-width: 480px) */
+/* ======================================= */
+/* Use this for extra cramped spaces */
+@media (max-width: 480px) {
+    
+    h1 {
+        font-size: 1.2em; /* Even smaller headings */
+    }
+    
+    /* Force body text to be slightly smaller */
+    body {
+        font-size: 14px; 
+    }
+}

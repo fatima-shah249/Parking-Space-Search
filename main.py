@@ -7,6 +7,7 @@ from sqlalchemy import text, exc
 import razorpay
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from geopy.geocoders import Nominatim
 # from main import app, db
 # import logging
 
@@ -321,6 +322,18 @@ def create_order():
         "vehicle": payment_type
     })
 
+esp_lat, esp_lng = 12.90732, 77.60590
+# location finding 
+geolocator = Nominatim(user_agent="ParkingFinderApp_vinay_2025")
+
+# Coordinates
+latitude = esp_lat
+longitude = esp_lng
+
+# Reverse geocode
+location_obj = geolocator.reverse((latitude, longitude), language='en')
+User_location = location_obj.address if location_obj else "Location not found"
+
 @app.route('/User', methods=['GET', 'POST'])
 def User():
     global esp_lat, esp_lng, nearby_zones
@@ -376,7 +389,7 @@ def User():
         slots=nearby_slots,
         lat=curr_lat,
         lng=curr_lng,
-        radius_km=(radius_km * 1000 if radius_km else None)
+        radius_km=(radius_km * 1000 if radius_km else None),User_location=User_location
     )
 
 @app.route('/map')
@@ -411,6 +424,68 @@ def map_view():
         flash(f"Error loading map: {e}", "error")
         return redirect(url_for("User"))
 
+@app.route('/Driver', methods=['GET', 'POST'])
+def Driver():
+    global esp_lat, esp_lng, nearby_zones
+    esp_lat, esp_lng = 12.90732, 77.60590  # ESP32 coordinates
+    curr_lat, curr_lng = esp_lat, esp_lng
+    radius_km = 2  # 2 km default radius
+    nearby_slots = []
+    User_location = "Unknown Location"
+
+    # ✅ Reverse Geocode using Nominatim safely
+    try:
+        geolocator = Nominatim(user_agent="parking_locator_app_v1 (contact: your_email@example.com)")
+        location_obj = geolocator.reverse((curr_lat, curr_lng), language='en')
+        if location_obj and location_obj.address:
+            full_address = location_obj.address
+            address_parts = full_address.split(",")
+            # Take only first 5 parts for clean output
+            short_address = ", ".join(address_parts[:5])
+            User_location = short_address.strip()
+        else:
+            User_location = "Address not found"
+    except Exception as e:
+        print(f"Nominatim error: {e}")
+        User_location = "Unable to fetch location"
+
+    # ✅ Fetch nearby zones (within 2 km)
+    try:
+        query = """
+            SELECT *
+            FROM (
+                SELECT slot_id, location, latitude, longitude, available_slots, occupied_slots,
+                       (6371 * ACOS(
+                           LEAST(1.0, COS(RADIANS(:lat)) * COS(RADIANS(latitude)) *
+                           COS(RADIANS(longitude) - RADIANS(:lng)) +
+                           SIN(RADIANS(:lat)) * SIN(RADIANS(latitude)))
+                       )) AS distance_km
+                FROM location_of_slots
+            ) AS sub
+            WHERE distance_km <= :radius_km
+            ORDER BY distance_km ASC;
+        """
+
+        result = db.session.execute(
+            text(query),
+            {"lat": curr_lat, "lng": curr_lng, "radius_km": radius_km}
+        )
+        nearby_slots = result.fetchall()
+        nearby_zones = nearby_slots
+
+    except Exception as e:
+        flash(f"Error fetching nearby slots: {e}", "error")
+        nearby_slots = []
+
+    return render_template(
+        'Driver.html',
+        slots=nearby_slots,
+        lat=curr_lat,
+        lng=curr_lng,
+        radius_km=radius_km * 1000,  # show in meters
+        User_location=User_location,
+        api_key="AIzaSyAqyzQZLE0TvmXnqNcII65Edvu71PV-HCI"
+    )
 
 @app.route("/contact", methods=["GET", "POST"])
 def contact():
@@ -586,5 +661,5 @@ if __name__ == '__main__':
     if not os.path.exists(UPLOAD_FOLDER):
         os.makedirs(UPLOAD_FOLDER)
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)  
+    app.run(host="0.0.0.0", port=port,debug=True)  
 
