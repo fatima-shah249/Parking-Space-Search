@@ -46,23 +46,26 @@ function initMap() {
         position: userLocation,
         map,
         title: "You are here",
-        icon: { url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png" }
+        icon: { url: "http://googleusercontent.com/maps/google.com/0" },
+        zIndex: 999 // Ensure user marker is always on top
     });
 
     // --- 4. Parking Zone Markers ---
     const nearbySlots = {{ slots|tojson }};
     
-    nearbySlots.forEach(slot => {
+    // ✅ MODIFIED: Get the 'index' of each slot in the loop
+    nearbySlots.forEach((slot, index) => {
         const slotPosition = { lat: parseFloat(slot.latitude), lng: parseFloat(slot.longitude) };
 
         const marker = new google.maps.Marker({
             position: slotPosition,
             map,
             title: slot.location,
+            // ✅ ADDED: Use the index to create a numbered label (index starts at 0, so we add 1)
+            label: (index + 1).toString(), 
         });
 
         marker.addListener("click", () => {
-            // ✅ MODIFIED: Button text is now "Proceed to Pay" and calls a new function
             const contentString = `
               <div class="p-2 font-sans" style="max-width: 250px;">
                 <h3 class="text-lg font-bold text-gray-800">${slot.location}</h3>
@@ -89,23 +92,18 @@ function initMap() {
 function proceedToPay(slotId, lat, lng) {
     const destination = { lat: lat, lng: lng };
     
-    // First, show the directions
     calculateAndDisplayRoute(destination);
     infoWindow.close();
 
-    // Second, initiate the payment
-    // We'll use a fixed amount for this example.
     const paymentAmount = 20.00; 
 
-    // Use Fetch API to call your backend's /create_order route
     fetch('/create_order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: paymentAmount, vehicle: 'car' }) // Sending amount and vehicle type
+        body: JSON.stringify({ amount: paymentAmount, vehicle: 'car' })
     })
     .then(response => response.json())
     .then(data => {
-        // Options for the Razorpay checkout
         const options = {
             key: data.key_id,
             amount: data.amount,
@@ -115,7 +113,6 @@ function proceedToPay(slotId, lat, lng) {
             order_id: data.order_id,
             handler: function (response){
                 alert('Payment successful! Payment ID: ' + response.razorpay_payment_id);
-                // Here you could make another API call to confirm the booking on your server
             },
             prefill: {
                 name: "Test User",
@@ -129,7 +126,6 @@ function proceedToPay(slotId, lat, lng) {
                 color: "#3399cc"
             }
         };
-        // Create a new Razorpay instance and open the checkout dialog
         const rzp1 = new Razorpay(options);
         rzp1.on('payment.failed', function (response){
             alert('Payment failed! Error: ' + response.error.description);
