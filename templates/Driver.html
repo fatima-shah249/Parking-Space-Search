@@ -41,19 +41,26 @@ function initMap() {
     directionsRenderer.setMap(map);
     directionsRenderer.setPanel(document.getElementById("directions-panel"));
 
-    // --- 3. User's Location Marker ---
+    // --- 3. User's Location Marker (RELIABLE VERSION) ---
     new google.maps.Marker({
         position: userLocation,
         map,
         title: "You are here",
-        icon: { url: "http://googleusercontent.com/maps/google.com/0" },
+        // ✅ Using an official Google Maps Symbol for a reliable blue circle
+        icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: "#4285F4", // Blue color
+            fillOpacity: 1,
+            strokeWeight: 2,
+            strokeColor: "white"
+        },
         zIndex: 999 // Ensure user marker is always on top
     });
 
     // --- 4. Parking Zone Markers ---
     const nearbySlots = {{ slots|tojson }};
     
-    // ✅ MODIFIED: Get the 'index' of each slot in the loop
     nearbySlots.forEach((slot, index) => {
         const slotPosition = { lat: parseFloat(slot.latitude), lng: parseFloat(slot.longitude) };
 
@@ -61,7 +68,6 @@ function initMap() {
             position: slotPosition,
             map,
             title: slot.location,
-            // ✅ ADDED: Use the index to create a numbered label (index starts at 0, so we add 1)
             label: (index + 1).toString(), 
         });
 
@@ -71,7 +77,7 @@ function initMap() {
                 <h3 class="text-lg font-bold text-gray-800">${slot.location}</h3>
                 <div class="text-gray-600 mt-2">
                   <p><strong>Available Slots:</strong> <span class="font-semibold text-green-600">${slot.available_slots}</span></p>
-                  <p><strong>Parking Fee:</strong> <span class="font-semibold text-gray-800">₹20</span></p>
+                  <p><strong>Parking Fee:</strong> <span class="font-semibold text-gray-800">₹40</span></p>
                 </div>
                 <button
                   onclick="proceedToPay(${slot.slot_id}, ${slot.latitude}, ${slot.longitude})"
@@ -95,7 +101,7 @@ function proceedToPay(slotId, lat, lng) {
     calculateAndDisplayRoute(destination);
     infoWindow.close();
 
-    const paymentAmount = 20.00; 
+    const paymentAmount = 40.00; 
 
     fetch('/create_order', {
         method: 'POST',
