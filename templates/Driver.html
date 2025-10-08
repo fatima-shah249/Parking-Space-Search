@@ -4,7 +4,7 @@
 {% block content %}
 <div class="bg-white rounded-xl shadow-md p-6 mb-6">
     <h1 class="text-3xl font-bold text-gray-900 mb-2 text-center">Nearby Parking Zones</h1>
-    <p class="text-gray-600 text-center mb-4">Click any parking icon for details and directions</p>
+    <p class="text-gray-600 text-center mb-4">Click any parking icon for details and payment</p>
     <div class="text-center bg-gray-100 p-4 rounded-lg shadow">
         <strong class="text-gray-800">📍 Your Current Location:</strong>
         <p class="text-gray-600 mt-1">{{ User_location }}</p>
@@ -13,7 +13,6 @@
 
 <div class="flex flex-col md:flex-row gap-4">
     <div id="map" class="w-full md:w-2/3 h-[600px] rounded-xl shadow-md"></div>
-    
     <div id="directions-panel" class="w-full md:w-1/3 h-[600px] overflow-y-auto bg-gray-50 p-4 rounded-xl shadow-md">
         <p class="text-gray-500">Route details will appear here.</p>
     </div>
@@ -25,7 +24,7 @@
 let map;
 let directionsService;
 let directionsRenderer;
-let infoWindow; // ✅ ADDED: To hold the pop-up dialog box
+let infoWindow;
 const userLocation = { lat: {{ lat }}, lng: {{ lng }} };
 
 function initMap() {
@@ -37,7 +36,7 @@ function initMap() {
 
     directionsService = new google.maps.DirectionsService();
     directionsRenderer = new google.maps.DirectionsRenderer();
-    infoWindow = new google.maps.InfoWindow(); // ✅ ADDED: Initialize the InfoWindow
+    infoWindow = new google.maps.InfoWindow();
 
     directionsRenderer.setMap(map);
     directionsRenderer.setPanel(document.getElementById("directions-panel"));
@@ -47,9 +46,7 @@ function initMap() {
         position: userLocation,
         map,
         title: "You are here",
-        icon: {
-            url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
-        }
+        icon: { url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png" }
     });
 
     // --- 4. Parking Zone Markers ---
@@ -64,21 +61,20 @@ function initMap() {
             title: slot.location,
         });
 
-        // ✅ MODIFIED: The click listener now opens the InfoWindow
         marker.addListener("click", () => {
-            // Create the HTML content for the dialog box
+            // ✅ MODIFIED: Button text is now "Proceed to Pay" and calls a new function
             const contentString = `
               <div class="p-2 font-sans" style="max-width: 250px;">
                 <h3 class="text-lg font-bold text-gray-800">${slot.location}</h3>
                 <div class="text-gray-600 mt-2">
                   <p><strong>Available Slots:</strong> <span class="font-semibold text-green-600">${slot.available_slots}</span></p>
-                  <p><strong>Occupied Slots:</strong> <span class="font-semibold text-red-600">${slot.occupied_slots}</span></p>
+                  <p><strong>Parking Fee:</strong> <span class="font-semibold text-gray-800">₹20</span></p>
                 </div>
                 <button
-                  onclick="getDirections(${slot.latitude}, ${slot.longitude})"
-                  class="mt-4 w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75"
+                  onclick="proceedToPay(${slot.slot_id}, ${slot.latitude}, ${slot.longitude})"
+                  class="mt-4 w-full px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75"
                 >
-                  Get Directions
+                  Proceed to Pay
                 </button>
               </div>
             `;
@@ -89,18 +85,64 @@ function initMap() {
     });
 }
 
-// --- 5. New function to be called from the InfoWindow button ---
-function getDirections(lat, lng) {
+// --- 5. New function to handle both directions and payment ---
+function proceedToPay(slotId, lat, lng) {
     const destination = { lat: lat, lng: lng };
+    
+    // First, show the directions
     calculateAndDisplayRoute(destination);
-    infoWindow.close(); // Close the dialog box after the button is clicked
+    infoWindow.close();
+
+    // Second, initiate the payment
+    // We'll use a fixed amount for this example.
+    const paymentAmount = 20.00; 
+
+    // Use Fetch API to call your backend's /create_order route
+    fetch('/create_order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: paymentAmount, vehicle: 'car' }) // Sending amount and vehicle type
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Options for the Razorpay checkout
+        const options = {
+            key: data.key_id,
+            amount: data.amount,
+            currency: data.currency,
+            name: "Smart Parking System",
+            description: `Payment for Slot ID: ${slotId}`,
+            order_id: data.order_id,
+            handler: function (response){
+                alert('Payment successful! Payment ID: ' + response.razorpay_payment_id);
+                // Here you could make another API call to confirm the booking on your server
+            },
+            prefill: {
+                name: "Test User",
+                email: "test.user@example.com",
+                contact: "9999999999"
+            },
+            notes: {
+                slot_id: slotId
+            },
+            theme: {
+                color: "#3399cc"
+            }
+        };
+        // Create a new Razorpay instance and open the checkout dialog
+        const rzp1 = new Razorpay(options);
+        rzp1.on('payment.failed', function (response){
+            alert('Payment failed! Error: ' + response.error.description);
+        });
+        rzp1.open();
+    })
+    .catch(error => console.error('Error:', error));
 }
+
 
 // --- 6. Function to Calculate and Display the Route (Unchanged) ---
 function calculateAndDisplayRoute(destination) {
-    // Clear previous directions from the panel
     document.getElementById("directions-panel").innerHTML = "";
-
     directionsService.route({
         origin: userLocation,
         destination: destination,
@@ -114,6 +156,8 @@ function calculateAndDisplayRoute(destination) {
     });
 }
 </script>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script async defer
     src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}&callback=initMap">
