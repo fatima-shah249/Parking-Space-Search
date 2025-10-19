@@ -8,8 +8,15 @@ import razorpay
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from geopy.geocoders import Nominatim
-# from main import app, db
-# import logging
+import cloudinary
+import cloudinary.uploader
+
+cloudinary.config(
+    cloud_name="dgpahvl9m",
+    api_key="397185777883491",
+    api_secret="edsJwdE-mzTcqsAKoLetcymYarM"
+)
+
 
 # --- Flask App Setup ---
 app = Flask(__name__)
@@ -186,14 +193,12 @@ def Status():
     return render_template("application_status.html", applications=applications)
 
 
-
 @app.route('/submit_parking_zone', methods=['POST'])
 def submit_parking_zone():
     if 'user_id' not in session:
         flash('You must be logged in to submit an application.', 'error')
         return redirect(url_for('Civilian_login'))
 
-    # UPDATED: Changed from UserApplication.query.get() to db.session.get()
     user_application = db.session.get(UserApplication, session['user_id'])
     if not user_application:
         flash('User not found. Please log in again.', 'error')
@@ -212,16 +217,12 @@ def submit_parking_zone():
             if allowed_file(govt_id_file.filename) and \
                allowed_file(property_proof_file.filename) and \
                allowed_file(zone_photo_file.filename):
+                
+                govt_id_upload = cloudinary.uploader.upload(govt_id_file, folder="parking_zone_docs", resource_type="auto")
+                property_proof_upload = cloudinary.uploader.upload(property_proof_file, folder="parking_zone_docs", resource_type="auto")
+                zone_photo_upload = cloudinary.uploader.upload(zone_photo_file, folder="parking_zone_docs", resource_type="auto")
 
-                govt_id_filename = secure_filename(govt_id_file.filename)
-                property_proof_filename = secure_filename(property_proof_file.filename)
-                zone_photo_filename = secure_filename(zone_photo_file.filename)
 
-                govt_id_file.save(os.path.join(app.config['UPLOAD_FOLDER'], govt_id_filename))
-                property_proof_file.save(os.path.join(app.config['UPLOAD_FOLDER'], property_proof_filename))
-                zone_photo_file.save(os.path.join(app.config['UPLOAD_FOLDER'], zone_photo_filename))
-
-                # Update the existing user record with application details
                 user_application.owner_name = request.form['owner_name']
                 user_application.phone = request.form['phone']
                 user_application.address = request.form['address']
@@ -230,13 +231,13 @@ def submit_parking_zone():
                 user_application.security_level = request.form['security_level']
                 user_application.price_per_hour = float(request.form['price'])
                 user_application.declaration_agreed = 'declaration' in request.form
-                
-                user_application.govt_id_path = govt_id_filename
-                user_application.property_proof_path = property_proof_filename
-                user_application.zone_photo_path = zone_photo_filename
+
+                user_application.govt_id_path = govt_id_upload['secure_url']
+                user_application.property_proof_path = property_proof_upload['secure_url']
+                user_application.zone_photo_path = zone_photo_upload['secure_url']
                 user_application.status = 'pending'
                 user_application.submission_date = datetime.datetime.utcnow()
-                
+
                 try:
                     db.session.commit()
                 except Exception as e:
