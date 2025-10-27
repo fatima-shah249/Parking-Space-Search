@@ -323,7 +323,7 @@ def create_order():
         "vehicle": payment_type
     })
 
-# esp_lat, esp_lng = 12.90732, 77.60590
+global esp_lat, esp_lng
 # # location finding 
 # geolocator = Nominatim(user_agent="ParkingFinderApp_vinay_2025")
 
