@@ -427,72 +427,68 @@ global esp_lat, esp_lng
 
 @app.route('/Driver', methods=['GET', 'POST'])
 def Driver():
-    global esp_lat, esp_lng, nearby_zones
-    curr_lat, curr_lng = esp_lat, esp_lng  # Dynamic coordinates from ESP32
-    radius_km = None
+    global esp_lat, esp_lng
     nearby_slots_data = []
+    default_radius_km = 2.0  # 2 km default radius
 
+    # --- Handle missing NavIC data safely ---
     if esp_lat is None or esp_lng is None:
         return "Waiting for NavIC device to send location...", 503
 
-    # Reverse geocode current location
+    user_lat, user_lng = esp_lat, esp_lng
+
+    # --- Load Google Maps API Key (from environment if available) ---
+    GMAPS_API_KEY = os.environ.get("GMAPS_API_KEY", "YOUR_FALLBACK_API_KEY_HERE")
+
+    # --- Reverse Geocode User Location ---
     try:
-        geolocator = Nominatim(user_agent="ParkingFinderApp_Driver_2025")
-        location_obj = geolocator.reverse((curr_lat, curr_lng), language='en')
-        user_location_address = location_obj.address if location_obj else "Location not found"
-    except Exception:
-        user_location_address = "Error fetching location"
+        geolocator = Nominatim(user_agent="smart_parking_app/1.0")
+        location_obj = geolocator.reverse((user_lat, user_lng), language='en')
+        if location_obj and location_obj.address:
+            address_parts = location_obj.address.split(",")
+            user_location_address = ", ".join(part.strip() for part in address_parts[:4])
+        else:
+            user_location_address = "Address not found"
+    except Exception as e:
+        app.logger.error(f"Geocoding error: {e}")
+        user_location_address = "Error fetching address"
 
-    if request.method == 'POST':
-        radius_input = request.form.get('radius')
-        if radius_input:
-            try:
-                radius_m = float(radius_input)
-                if radius_m <= 0:
-                    flash("Radius must be positive.", "error")
-                    return redirect(url_for("Driver"))
+    # --- Query Nearby Parking Slots ---
+    try:
+        query = text("""
+            SELECT * FROM (
+                SELECT 
+                    slot_id, location, latitude, longitude, available_slots, occupied_slots,
+                    (6371 * ACOS(
+                        LEAST(1.0,
+                            COS(RADIANS(:lat)) * COS(RADIANS(latitude)) *
+                            COS(RADIANS(longitude) - RADIANS(:lng)) +
+                            SIN(RADIANS(:lat)) * SIN(RADIANS(latitude))
+                        )
+                    )) AS distance_km
+                FROM location_of_slots
+            ) AS sub
+            WHERE distance_km <= :radius_km
+            ORDER BY distance_km ASC;
+        """)
 
-                radius_km = radius_m / 1000.0
+        result = db.session.execute(
+            query,
+            {"lat": user_lat, "lng": user_lng, "radius_km": default_radius_km}
+        )
+        nearby_slots_data = [dict(row._mapping) for row in result]
+    except Exception as e:
+        app.logger.error(f"Database error fetching nearby slots: {e}")
+        flash("Unable to retrieve nearby parking zones.", "error")
 
-                query = text("""
-                    SELECT * FROM (
-                        SELECT 
-                            slot_id, location, latitude, longitude, available_slots, occupied_slots,
-                            (6371 * ACOS(
-                                LEAST(1.0,
-                                    COS(RADIANS(:lat)) * COS(RADIANS(latitude)) *
-                                    COS(RADIANS(longitude) - RADIANS(:lng)) +
-                                    SIN(RADIANS(:lat)) * SIN(RADIANS(latitude))
-                                )
-                            )) AS distance_km
-                        FROM location_of_slots
-                    ) AS sub
-                    WHERE distance_km < :radius_km
-                    ORDER BY distance_km ASC;
-                """)
-
-                result = db.session.execute(
-                    query,
-                    {"lat": curr_lat, "lng": curr_lng, "radius_km": radius_km}
-                )
-                nearby_slots_data = [dict(row._mapping) for row in result]
-                nearby_zones = nearby_slots_data
-
-                if not nearby_slots_data:
-                    flash("No nearby slots found within this radius.", "info")
-
-            except ValueError:
-                flash("Invalid radius value.", "error")
-            except Exception as e:
-                flash(f"Error fetching nearby slots: {e}", "error")
-
+    # --- Render the Driver Page ---
     return render_template(
         'Driver.html',
         slots=nearby_slots_data,
-        lat=curr_lat,
-        lng=curr_lng,
+        lat=user_lat,
+        lng=user_lng,
         User_location=user_location_address,
-        api_key="AIzaSyAqyzQZLE0TvmXnqNcII65Edvu71PV-HCI"
+        api_key=GMAPS_API_KEY
     )
 
 @app.route("/contact", methods=["GET", "POST"])
