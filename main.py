@@ -432,6 +432,9 @@ def Driver():
     radius_km = None
     nearby_slots_data = []
 
+    if esp_lat is None or esp_lng is None:
+        return "Waiting for NavIC device to send location...", 503
+
     # Reverse geocode current location
     try:
         geolocator = Nominatim(user_agent="ParkingFinderApp_Driver_2025")
