@@ -427,81 +427,67 @@ def create_order():
 
 @app.route('/Driver', methods=['GET', 'POST'])
 def Driver():
-    # --- Configuration ---
-    # It's better to get these from a config file or environment variables
-    # For now, we'll use the hardcoded values.
-    # IMPORTANT: Do NOT commit real API keys to your code.
-    GMAPS_API_KEY = os.environ.get("GMAPS_API_KEY", "YOUR_FALLBACK_API_KEY_HERE")
-    
-    # Static coordinates for the user's location (e.g., from an ESP32)
-    user_lat, user_lng = 12.90732, 77.60590
-    
-    # Default search radius in kilometers
-    default_radius_km = 2.0
-    
-    # --- Initialization ---
+    global esp_lat, esp_lng, nearby_zones
+    curr_lat, curr_lng = esp_lat, esp_lng  # Dynamic coordinates from ESP32
+    radius_km = None
     nearby_slots_data = []
-    user_location_address = "Location not available"
 
-    # --- Geocoding: Get user's address from coordinates ---
+    # Reverse geocode current location
     try:
-        # It's good practice to set a user_agent
-        geolocator = Nominatim(user_agent="smart_parking_app/1.0")
-        location_obj = geolocator.reverse((user_lat, user_lng), language='en')
-        
-        if location_obj and location_obj.address:
-            # Create a shorter, more readable address
-            address_parts = location_obj.address.split(",")
-            user_location_address = ", ".join(part.strip() for part in address_parts[:4])
-        else:
-            user_location_address = "Address not found for coordinates"
-            
-    except Exception as e:
-        app.logger.error(f"Geocoding (Nominatim) error: {e}")
-        user_location_address = "Error fetching address"
+        geolocator = Nominatim(user_agent="ParkingFinderApp_Driver_2025")
+        location_obj = geolocator.reverse((curr_lat, curr_lng), language='en')
+        user_location_address = location_obj.address if location_obj else "Location not found"
+    except Exception:
+        user_location_address = "Error fetching location"
 
-    # --- Database Query: Find nearby parking slots ---
-    try:
-        # ✅ FIX: This query uses a subquery to allow filtering by the 'distance_km' alias.
-        # This is the standard and correct way to do this in PostgreSQL.
-        query = text("""
-            SELECT * FROM (
-                SELECT 
-                    slot_id, location, latitude, longitude, available_slots, occupied_slots,
-                    (6371 * ACOS(
-                        LEAST(1.0, -- Clamp value to 1.0 to avoid domain errors
-                            COS(RADIANS(:lat)) * COS(RADIANS(latitude)) *
-                            COS(RADIANS(longitude) - RADIANS(:lng)) +
-                            SIN(RADIANS(:lat)) * SIN(RADIANS(latitude))
-                        )
-                    )) AS distance_km
-                FROM 
-                    location_of_slots
-            ) AS calculated_distances
-            WHERE 
-                distance_km <= :radius_km
-            ORDER BY 
-                distance_km ASC;
-        """)
+    if request.method == 'POST':
+        radius_input = request.form.get('radius')
+        if radius_input:
+            try:
+                radius_m = float(radius_input)
+                if radius_m <= 0:
+                    flash("Radius must be positive.", "error")
+                    return redirect(url_for("Driver"))
 
-        result = db.session.execute(
-            query,
-            {"lat": user_lat, "lng": user_lng, "radius_km": default_radius_km}
-        )
-        
-        # This part remains the same
-        nearby_slots_data = [dict(row._mapping) for row in result]
+                radius_km = radius_m / 1000.0
 
-    except Exception as e:
-        app.logger.error(f"Database error while fetching nearby slots: {e}")
-        flash("Could not retrieve parking locations due to a server error.", "error")
+                query = text("""
+                    SELECT * FROM (
+                        SELECT 
+                            slot_id, location, latitude, longitude, available_slots, occupied_slots,
+                            (6371 * ACOS(
+                                LEAST(1.0,
+                                    COS(RADIANS(:lat)) * COS(RADIANS(latitude)) *
+                                    COS(RADIANS(longitude) - RADIANS(:lng)) +
+                                    SIN(RADIANS(:lat)) * SIN(RADIANS(latitude))
+                                )
+                            )) AS distance_km
+                        FROM location_of_slots
+                    ) AS sub
+                    WHERE distance_km < :radius_km
+                    ORDER BY distance_km ASC;
+                """)
 
-    # --- Render Template ---
+                result = db.session.execute(
+                    query,
+                    {"lat": curr_lat, "lng": curr_lng, "radius_km": radius_km}
+                )
+                nearby_slots_data = [dict(row._mapping) for row in result]
+                nearby_zones = nearby_slots_data
+
+                if not nearby_slots_data:
+                    flash("No nearby slots found within this radius.", "info")
+
+            except ValueError:
+                flash("Invalid radius value.", "error")
+            except Exception as e:
+                flash(f"Error fetching nearby slots: {e}", "error")
+
     return render_template(
         'Driver.html',
         slots=nearby_slots_data,
-        lat=user_lat,
-        lng=user_lng,
+        lat=curr_lat,
+        lng=curr_lng,
         User_location=user_location_address,
         api_key="AIzaSyAqyzQZLE0TvmXnqNcII65Edvu71PV-HCI"
     )
