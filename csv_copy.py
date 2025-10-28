@@ -3,7 +3,7 @@ import pandas as pd
 from sqlalchemy import create_engine
 import os
 
-DATABASE_URL = "postgresql://parkingmanagement_user:lYskYRdkX7RopjtmZVD92jFzmp2uKEOb@dpg-d3ckgud6ubrc73esgf70-a.oregon-postgres.render.com/parkingmanagement"
+DATABASE_URL = "postgresql://parking_management_ywqc_user:v6Avfv0Ire0sfXOfyRfzNz7oxUhmWAIc@dpg-d40fe8uuk2gs73a2cij0-a.oregon-postgres.render.com/parking_management_ywqc"
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable not set!")
 
