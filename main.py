@@ -285,16 +285,17 @@ def handle_application(app_id, action):
 
 @app.route('/update_location', methods=['POST'])
 def update_location():
-    global esp_lat, esp_lng
     try:
         data = request.get_json(force=True)
         lat = data.get("lat")
         lng = data.get("lng")
         if lat is None or lng is None:
             return jsonify({"error": "Missing lat or lng"}), 400
-        esp_lat = float(lat)
-        esp_lng = float(lng)
+
+        session['esp_lat'] = float(lat)
+        session['esp_lng'] = float(lng)
         print("Received data:", data)
+
         return jsonify({"message": "Location updated"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -427,15 +428,15 @@ global esp_lat, esp_lng
 
 @app.route('/Driver', methods=['GET', 'POST'])
 def Driver():
-    global esp_lat, esp_lng
     nearby_slots_data = []
     default_radius_km = 2.0  # 2 km default radius
 
     # --- Handle missing NavIC data safely ---
-    if esp_lat is None or esp_lng is None:
-        return "Waiting for NavIC device to send location...", 503
+    user_lat = session.get('esp_lat')
+    user_lng = session.get('esp_lng')
 
-    user_lat, user_lng = esp_lat, esp_lng
+    if user_lat is None or user_lng is None:
+        return "Waiting for NavIC device to send location...", 503
 
     # --- Load Google Maps API Key (from environment if available) ---
     GMAPS_API_KEY = os.environ.get("GMAPS_API_KEY", "YOUR_FALLBACK_API_KEY_HERE")
