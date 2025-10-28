@@ -95,18 +95,26 @@ function initMap() {
     const nearbySlots = {{ slots|tojson }};
     nearbySlots.forEach((slot, index) => {
         const slotPosition = { lat: parseFloat(slot.latitude), lng: parseFloat(slot.longitude) };
+
+        // Color marker based on Civilian_zone
+        const markerColor = (slot.Civilian_zone === "Yes") ? "http://maps.google.com/mapfiles/ms/icons/green-dot.png"
+                                                          : "http://maps.google.com/mapfiles/ms/icons/red-dot.png";
+
         const marker = new google.maps.Marker({
             position: slotPosition,
             map,
             title: slot.location,
             label: (index + 1).toString(),
+            icon: markerColor
         });
+
         marker.addListener("click", () => {
             const contentString = `
               <div class="p-2 font-sans" style="max-width: 250px;">
                 <h3 class="text-lg font-bold text-gray-800">${slot.location}</h3>
                 <div class="text-gray-600 mt-2">
                   <p><strong>Available Slots:</strong> <span class="font-semibold text-green-600">${slot.available_slots}</span></p>
+                  <p><strong>Civilian Zone:</strong> <span class="font-semibold">${slot.Civilian_zone}</span></p>
                   <p><strong>Parking Fee:</strong> <span class="font-semibold text-gray-800">₹40</span></p>
                 </div>
                 <div class="flex gap-2 mt-4">

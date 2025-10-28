@@ -92,6 +92,7 @@ class Location_of_slots(db.Model):
     longitude = db.Column(db.Float)
     available_slots = db.Column(db.Integer)
     occupied_slots = db.Column(db.Integer)
+    civilian_zone=db.Column(db.String(10))
 
 class UserConcerns(db.Model):
     __tablename__ = 'user_concerns'
@@ -432,8 +433,10 @@ def Driver():
     default_radius_km = 2.0  # 2 km default radius
 
     # --- Handle missing NavIC data safely ---
-    user_lat = session.get('esp_lat')
-    user_lng = session.get('esp_lng')
+    # user_lat = session.get('esp_lat')
+    # user_lng = session.get('esp_lng')
+    user_lat=12.90868
+    user_lng=77.60358
 
     if user_lat is None or user_lng is None:
         return "Waiting for NavIC device to send location...", 503
@@ -590,7 +593,8 @@ def create_slot():
             latitude=float(data['latitude']),
             longitude=float(data['longitude']),
             available_slots=int(data['available_slots']),
-            occupied_slots=int(data['occupied_slots'])
+            occupied_slots=int(data['occupied_slots']),
+            civilian_zone=data['civilian_zone']
         )
         db.session.add(new_slot)
         try:
