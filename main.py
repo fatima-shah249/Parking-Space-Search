@@ -430,13 +430,27 @@ global esp_lat, esp_lng
 @app.route('/Driver', methods=['GET', 'POST'])
 def Driver():
     nearby_slots_data = []
-    default_radius_km = 2.0  # 2 km default radius
+    current_radius_meters = 1500  # Default value in meters (matches HTML)
+
+    if request.method == 'POST':
+        # --- Handle radius from the form ---
+        try:
+            # Get radius from form (it's in meters from the HTML input)
+            current_radius_meters = int(request.form.get('radius_meters', 1500))
+            radius_km = float(current_radius_meters) / 1000.0
+        except (ValueError, TypeError):
+            radius_km = 1.5 # Fallback if conversion fails
+            flash("Invalid radius value, defaulting to 1.5km.", "warning")
+    else:
+        # --- Handle GET request (first page load) ---
+        radius_km = 1.5 # Default 1.5km radius on first load
+        current_radius_meters = 1500
 
     # --- Handle missing NavIC data safely ---
     # user_lat = session.get('esp_lat')
     # user_lng = session.get('esp_lng')
-    user_lat=12.90868
-    user_lng=77.60358
+    user_lat = 12.90868
+    user_lng = 77.60358
 
     if user_lat is None or user_lng is None:
         return "Waiting for NavIC device to send location...", 503
@@ -457,7 +471,7 @@ def Driver():
         app.logger.error(f"Geocoding error: {e}")
         user_location_address = "Error fetching address"
 
-    # --- Query Nearby Parking Slots ---
+    # --- Query Nearby Parking Slots (now uses dynamic radius_km) ---
     try:
         query = text("""
             SELECT * FROM (
@@ -478,7 +492,8 @@ def Driver():
 
         result = db.session.execute(
             query,
-            {"lat": user_lat, "lng": user_lng, "radius_km": default_radius_km}
+            # Use the new dynamic radius_km variable here
+            {"lat": user_lat, "lng": user_lng, "radius_km": radius_km}
         )
         nearby_slots_data = [dict(row._mapping) for row in result]
     except Exception as e:
@@ -492,28 +507,10 @@ def Driver():
         lat=user_lat,
         lng=user_lng,
         User_location=user_location_address,
-        api_key='AIzaSyAqyzQZLE0TvmXnqNcII65Edvu71PV-HCI'
+        api_key='AIzaSyAqyzQZLE0TvmXnqNcII65Edvu71PV-HCI',
+        # Pass the current radius back to the HTML to display in the box
+        current_radius_meters=current_radius_meters
     )
-
-@app.route("/contact", methods=["GET", "POST"])
-def contact():
-    if request.method == "POST":
-        user_email = request.form.get("email")
-        message = request.form.get("message")
-        if user_email and message:
-            new_concern = UserConcerns(user_email=user_email, message=message)
-            db.session.add(new_concern)
-            try:
-                db.session.commit()
-            except Exception as e:
-                db.session.rollback()
-                app.logger.exception("DB commit failed: %s", e)
-                flash("Internal error. Please try again.", "error")
-            flash("Your message has been sent successfully!", "success")
-            return redirect(url_for("contact"))
-        else:
-            flash("Please fill in all required fields.", "error")
-    return render_template("contact.html")
 
 @app.route("/about")
 def about():
