@@ -85,66 +85,62 @@ function initMap() {
   });
 
   // --- Parking Zone Markers ---
-  const nearbySlots = {{ slots | tojson }};
-  nearbySlots.forEach((slot, index) => {
-    const slotPosition = { lat: parseFloat(slot.latitude), lng: parseFloat(slot.longitude) };
-    const fillColor = (slot.civilian_zone && slot.civilian_zone.toLowerCase() === "yes")
-      ? "#4CAF50" // Green for civilian zones
-      : "#FF5252"; // Red for others
+ const nearbySlots = {{ slots | tojson }};
+nearbySlots.forEach((slot, index) => {
+  const slotPosition = { lat: parseFloat(slot.latitude), lng: parseFloat(slot.longitude) };
+  const fillColor = (slot.civilian_zone && slot.civilian_zone.toLowerCase() === "yes")
+    ? "#4CAF50" // Green for civilian zones
+    : "#FF5252"; // Red for others
 
-    // Custom SVG pin icon
-    const svgMarker = {
-      path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z",
-      fillColor: fillColor,
-      fillOpacity: 1,
-      strokeColor: "#FFFFFF",
-      strokeWeight: 1.5,
-      scale: 1.5,
-      anchor: new google.maps.Point(12, 24)
-    };
+  // Custom SVG pin icon
+  const svgMarker = {
+    path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z",
+    fillColor: fillColor,
+    fillOpacity: 1,
+    strokeColor: "#FFFFFF",
+    strokeWeight: 1.5,
+    scale: 1.5,
+    anchor: new google.maps.Point(12, 24)
+  };
 
-    const marker = new google.maps.Marker({
-      position: slotPosition,
-      map,
-      title: slot.location || "Unknown Location",
-      icon: svgMarker,
-      label: {
-        text: (index + 1).toString(),
-        color: "#000000",
-        fontSize: "10px",
-        fontWeight: "bold"
-      },
-      zIndex: 1
-    });
-
-    marker.addListener("click", () => {
-      const locationName = slot.location || "Unknown";
-      const available = slot.available_slots ?? "N/A";
-      const zoneType = slot.civilian_zone ?? "N/A";
-
-      const contentString = `
-        <div class="p-2 font-sans" style="max-width: 250px;">
-          <h3 class="text-lg font-bold text-gray-800">${locationName}</h3>
-          <div class="text-gray-600 mt-2">
-            <p><strong>Available Slots:</strong> <span class="font-semibold text-green-600">${available}</span></p>
-            <p><strong>Civilian Zone:</strong> <span class="font-semibold">${zoneType}</span></p>
-            <p><strong>Parking Fee:</strong> <span class="font-semibold text-gray-800">₹40</span></p>
-          </div>
-          <div class="flex gap-2 mt-4">
-            <button onclick="getDirections(${slot.latitude}, ${slot.longitude})"
-              class="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700">
-              Directions
-            </button>
-            <button onclick="proceedToPay(${slot.slot_id})"
-              class="w-full px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700">
-              Pay Now
-            </button>
-          </div>
-        </div>`;
-      infoWindow.setContent(contentString);
-      infoWindow.open(map, marker);
-    });
+  const marker = new google.maps.Marker({
+    position: slotPosition,
+    map,
+    title: slot.location || "Unknown Location",
+    icon: svgMarker,
+    label: {
+      text: (index + 1).toString(),
+      color: "#000000",
+      fontSize: "10px",
+      fontWeight: "bold"
+    },
+    zIndex: 1
   });
+
+  marker.addListener("click", () => {
+    const contentString = `
+      <div class="p-2 font-sans" style="max-width: 250px;">
+        <h3 class="text-lg font-bold text-gray-800">${slot.location}</h3>
+        <div class="text-gray-600 mt-2">
+          <p><strong>Available Slots:</strong> <span class="font-semibold text-green-600">${slot.available_slots}</span></p>
+          <p><strong>Civilian Zone:</strong> <span class="font-semibold">${slot.civilian_zone}</span></p>
+          <p><strong>Parking Fee:</strong> <span class="font-semibold text-gray-800">₹40</span></p>
+        </div>
+        <div class="flex gap-2 mt-4">
+          <button onclick="getDirections(${slot.latitude}, ${slot.longitude})"
+            class="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700">
+            Directions
+          </button>
+          <button onclick="proceedToPay(${slot.slot_id})"
+            class="w-full px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700">
+            Pay Now
+          </button>
+        </div>
+      </div>`;
+    infoWindow.setContent(contentString);
+    infoWindow.open(map, marker);
+  });
+});
 
   // --- Auto Update Location ---
   async function fetchAndUpdateUserLocation() {
