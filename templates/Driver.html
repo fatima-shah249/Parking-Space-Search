@@ -86,23 +86,21 @@ function initMap() {
 
   // --- Parking Zone Markers ---
 const nearbySlots = {{ slots | tojson }};
-
 nearbySlots.forEach((slot, index) => {
   const slotPosition = { lat: parseFloat(slot.latitude), lng: parseFloat(slot.longitude) };
   const fillColor = (slot.civilian_zone && slot.civilian_zone.toLowerCase() === "yes")
-    ? "#34A853" // Bold green
-    : "#EA4335"; // Bold red
+    ? "#4CAF50" // Green for civilian zones
+    : "#FF5252"; // Red for others
 
-  // Circular bold marker with centered label
+  // Custom SVG pin icon
   const svgMarker = {
-    path: "M12 2C7 2 3 6 3 11c0 5.25 9 11 9 11s9-5.75 9-11c0-5-4-9-9-9z",
+    path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z",
     fillColor: fillColor,
     fillOpacity: 1,
-    strokeColor: "#000",
-    strokeWeight: 2,
-    scale: 1.8,
-    anchor: new google.maps.Point(12, 24),
-    labelOrigin: new google.maps.Point(12, 11)
+    strokeColor: "#FFFFFF",
+    strokeWeight: 1.5,
+    scale: 1.5,
+    anchor: new google.maps.Point(12, 24)
   };
 
   const marker = new google.maps.Marker({
@@ -112,14 +110,12 @@ nearbySlots.forEach((slot, index) => {
     icon: svgMarker,
     label: {
       text: (index + 1).toString(),
-      color: "#fff",
-      fontSize: "11px",
+      color: "#000000",
+      fontSize: "10px",
       fontWeight: "bold"
     },
     zIndex: 2
   });
-});
-
 
   marker.addListener("click", () => {
     const contentString = `
