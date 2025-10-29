@@ -462,7 +462,7 @@ def Driver():
         query = text("""
             SELECT * FROM (
                 SELECT 
-                    slot_id, location, latitude, longitude, available_slots, occupied_slots,
+                    slot_id, location, latitude, longitude, available_slots, occupied_slots,civilian_zone,
                     (6371 * ACOS(
                         LEAST(1.0,
                             COS(RADIANS(:lat)) * COS(RADIANS(latitude)) *
