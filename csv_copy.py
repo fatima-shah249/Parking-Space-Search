@@ -11,14 +11,12 @@ engine = create_engine(DATABASE_URL)
 base_dir = os.path.join(os.path.dirname(__file__), "static", "data")
 
 csv_mappings = {
-    "location_of_slots.csv": "location_of_slots",
-    "user_applications.csv": "user_applications",
-    "user_concerns.csv": "user_concerns"
+    "location_of_slots.csv": "location_of_slots"
 }
 
 for file_name, table_name in csv_mappings.items():
     file_path = os.path.join(base_dir, file_name)
     print(f"Importing {file_name} into table {table_name}...")
-    df = pd.read_csv(file_path, encoding='latin1')
+    df = pd.read_csv(file_path, encoding='latin1',sep=';')
     df.to_sql(table_name, engine, if_exists='append', index=False)
     print(f"{table_name} imported successfully!")
