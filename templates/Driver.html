@@ -85,28 +85,31 @@
     });
 
     // --- Parking Zone Markers ---
-    const nearbySlots = {{ slots | tojson
-  }};
+// --- Parking Zone Markers ---
+  const nearbySlots = {{ slots | tojson }};
   nearbySlots.forEach((slot, index) => {
     const slotPosition = { lat: parseFloat(slot.latitude), lng: parseFloat(slot.longitude) };
 
-    // Use professional map pin icons
-    const iconUrl = slot.civilian_zone?.toLowerCase() === "yes"
-      ? "https://maps.gstatic.com/mapfiles/ms2/micons/green.png"
-      : "https://maps.gstatic.com/mapfiles/ms2/micons/red.png";
+    // Determine the pin color based on the zone
+    const pinColor = slot.civilian_zone?.toLowerCase() === "yes"
+      ? "#00C853" // A bright green
+      : "#D50000"; // A bright red
 
     const marker = new google.maps.Marker({
       position: slotPosition,
       map,
       title: slot.location || "Unknown Location",
       icon: {
-        url: iconUrl,
-        scaledSize: new google.maps.Size(45, 45),  // slightly larger for visibility
-        labelOrigin: new google.maps.Point(23, 12)
+        path: google.maps.SymbolPath.MARKER, // This is the standard Google Maps pin shape
+        fillColor: pinColor,
+        fillOpacity: 1,
+        strokeWeight: 1,
+        strokeColor: "#333", // A dark outline for better contrast
+        scale: 1.5, // Make the pin slightly larger
       },
       label: {
         text: (index + 1).toString(),
-        color: "#000",
+        color: "white", // Make the number white to stand out on the colored pin
         fontSize: "12px",
         fontWeight: "bold"
       },
@@ -141,7 +144,6 @@
       infoWindow.open(map, marker);
     });
   });
-
 
   // --- Auto Update Location ---
   async function fetchAndUpdateUserLocation() {
