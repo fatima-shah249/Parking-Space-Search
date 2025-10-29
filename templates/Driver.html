@@ -91,9 +91,9 @@
     const slotPosition = { lat: parseFloat(slot.latitude), lng: parseFloat(slot.longitude) };
 
     // Use professional map pin icons
-    const iconUrl = (slot.civilian_zone && slot.civilian_zone.toLowerCase() === "yes")
-      ? "https://maps.google.com/mapfiles/ms2/icons/green-dot.png"   // Green pin
-      : "https://maps.google.com/mapfiles/ms2/icons/red-dot.png";     // Red pin
+    const iconUrl = slot.civilian_zone?.toLowerCase() === "yes"
+      ? "https://maps.gstatic.com/mapfiles/ms2/micons/green.png"
+      : "https://maps.gstatic.com/mapfiles/ms2/micons/red.png";
 
     const marker = new google.maps.Marker({
       position: slotPosition,
