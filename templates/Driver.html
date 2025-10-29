@@ -25,108 +25,105 @@
 </div>
 
 <script>
-  let map, directionsService, directionsRenderer, infoWindow;
-  let searchMarker, userMarker;
-  const userLocation = { lat: {{ lat }}, lng: { { lng } } };
+let map, directionsService, directionsRenderer, infoWindow;
+let searchMarker, userMarker;
+const userLocation = { lat: {{ lat }}, lng: {{ lng }} };
 
-  function initMap() {
-    map = new google.maps.Map(document.getElementById("map"), {
-      center: userLocation,
-      zoom: 14,
-      disableDefaultUI: true,
-      zoomControl: true,
-    });
+function initMap() {
+  map = new google.maps.Map(document.getElementById("map"), {
+    center: userLocation,
+    zoom: 14,
+    disableDefaultUI: true,
+    zoomControl: true,
+  });
 
-    directionsService = new google.maps.DirectionsService();
-    directionsRenderer = new google.maps.DirectionsRenderer();
-    infoWindow = new google.maps.InfoWindow();
-    directionsRenderer.setMap(map);
-    directionsRenderer.setPanel(document.getElementById("directions-panel"));
+  directionsService = new google.maps.DirectionsService();
+  directionsRenderer = new google.maps.DirectionsRenderer();
+  infoWindow = new google.maps.InfoWindow();
+  directionsRenderer.setMap(map);
+  directionsRenderer.setPanel(document.getElementById("directions-panel"));
 
-    // --- User Marker ---
-    userMarker = new google.maps.Marker({
-      position: userLocation,
-      map,
-      title: "You are here",
-      icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 8,
-        fillColor: "#4285F4",
-        fillOpacity: 1,
-        strokeWeight: 2,
-        strokeColor: "white"
-      },
-      zIndex: 999
-    });
+  // --- User Marker ---
+  userMarker = new google.maps.Marker({
+    position: userLocation,
+    map,
+    title: "You are here",
+    icon: {
+      path: google.maps.SymbolPath.CIRCLE,
+      scale: 8,
+      fillColor: "#4285F4",
+      fillOpacity: 1,
+      strokeWeight: 2,
+      strokeColor: "white"
+    },
+    zIndex: 999
+  });
 
-    // --- Search Bar ---
-    const input = document.getElementById("pac-input");
-    const autocomplete = new google.maps.places.Autocomplete(input);
-    autocomplete.bindTo("bounds", map);
-    searchMarker = new google.maps.Marker({ map, anchorPoint: new google.maps.Point(0, -29) });
+  // --- Search Bar ---
+  const input = document.getElementById("pac-input");
+  const autocomplete = new google.maps.places.Autocomplete(input);
+  autocomplete.bindTo("bounds", map);
+  searchMarker = new google.maps.Marker({ map, anchorPoint: new google.maps.Point(0, -29) });
+  searchMarker.setVisible(false);
+
+  autocomplete.addListener("place_changed", () => {
     searchMarker.setVisible(false);
+    const place = autocomplete.getPlace();
+    if (!place.geometry || !place.geometry.location) {
+      window.alert("No details available for input: '" + place.name + "'");
+      return;
+    }
+    if (place.geometry.viewport) map.fitBounds(place.geometry.viewport);
+    else {
+      map.setCenter(place.geometry.location);
+      map.setZoom(17);
+    }
+    searchMarker.setPosition(place.geometry.location);
+    searchMarker.setVisible(true);
+    infoWindow.setContent(`<div><strong>${place.name}</strong><br>${place.formatted_address}</div>`);
+    infoWindow.open(map, searchMarker);
+  });
 
-    autocomplete.addListener("place_changed", () => {
-      searchMarker.setVisible(false);
-      const place = autocomplete.getPlace();
-      if (!place.geometry || !place.geometry.location) {
-        window.alert("No details available for input: '" + place.name + "'");
-        return;
-      }
-      if (place.geometry.viewport) map.fitBounds(place.geometry.viewport);
-      else {
-        map.setCenter(place.geometry.location);
-        map.setZoom(17);
-      }
-      searchMarker.setPosition(place.geometry.location);
-      searchMarker.setVisible(true);
-      infoWindow.setContent(`<div><strong>${place.name}</strong><br>${place.formatted_address}</div>`);
-      infoWindow.open(map, searchMarker);
-    });
+  // --- Parking Zone Markers ---
+ const nearbySlots = {{ slots | tojson }};
+nearbySlots.forEach((slot, index) => {
+  const slotPosition = { lat: parseFloat(slot.latitude), lng: parseFloat(slot.longitude) };
+  const fillColor = (slot.civilian_zone && slot.civilian_zone.toLowerCase() === "yes")
+    ? "#4CAF50" // Green for civilian zones
+    : "#FF5252"; // Red for others
 
-    // --- Parking Zone Markers ---
-// --- Parking Zone Markers ---
-  const nearbySlots = {{ slots | tojson }};
-  nearbySlots.forEach((slot, index) => {
-    const slotPosition = { lat: parseFloat(slot.latitude), lng: parseFloat(slot.longitude) };
+  // Custom SVG pin icon
+  const svgMarker = {
+    path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z",
+    fillColor: fillColor,
+    fillOpacity: 1,
+    strokeColor: "#FFFFFF",
+    strokeWeight: 1.5,
+    scale: 1.5,
+    anchor: new google.maps.Point(12, 24)
+  };
 
-    // Determine the pin color based on the zone
-    const pinColor = slot.civilian_zone?.toLowerCase() === "yes"
-      ? "#00C853" // A bright green
-      : "#D50000"; // A bright red
+  const marker = new google.maps.Marker({
+    position: slotPosition,
+    map,
+    title: slot.location || "Unknown Location",
+    icon: svgMarker,
+    label: {
+      text: (index + 1).toString(),
+      color: "#000000",
+      fontSize: "10px",
+      fontWeight: "bold"
+    },
+    zIndex: 1
+  });
 
-    const marker = new google.maps.Marker({
-      position: slotPosition,
-      map,
-      title: slot.location || "Unknown Location",
-      icon: {
-        path: google.maps.SymbolPath.MARKER, // This is the standard Google Maps pin shape
-        fillColor: pinColor,
-        fillOpacity: 1,
-        strokeWeight: 1,
-        strokeColor: "#333", // A dark outline for better contrast
-        scale: 1.5, // Make the pin slightly larger
-      },
-      label: {
-        text: (index + 1).toString(),
-        color: "white", // Make the number white to stand out on the colored pin
-        fontSize: "12px",
-        fontWeight: "bold"
-      },
-      zIndex: 1
-    });
-
-    marker.addListener("click", () => {
-      const locationName = slot.location || "Unknown";
-      const available = slot.available_slots ?? "N/A";
-      const zoneType = slot.civilian_zone ?? "N/A";
-
-      const contentString = `
+  marker.addListener("click", () => {
+    const contentString = `
       <div class="p-2 font-sans" style="max-width: 250px;">
-        <h3 class="text-lg font-bold text-gray-800">${locationName}</h3>
+        <h3 class="text-lg font-bold text-gray-800">${slot.location}</h3>
         <div class="text-gray-600 mt-2">
-          <p><strong>Available Slots:</strong> <span class="font-semibold text-green-600">${available}</span></p>
-          <p><strong>Civilian Zone:</strong> <span class="font-semibold">${zoneType}</span></p>
+          <p><strong>Available Slots:</strong> <span class="font-semibold text-green-600">${slot.available_slots}</span></p>
+          <p><strong>Civilian Zone:</strong> <span class="font-semibold">${slot.civilian_zone}</span></p>
           <p><strong>Parking Fee:</strong> <span class="font-semibold text-gray-800">₹40</span></p>
         </div>
         <div class="flex gap-2 mt-4">
@@ -140,10 +137,10 @@
           </button>
         </div>
       </div>`;
-      infoWindow.setContent(contentString);
-      infoWindow.open(map, marker);
-    });
+    infoWindow.setContent(contentString);
+    infoWindow.open(map, marker);
   });
+});
 
   // --- Auto Update Location ---
   async function fetchAndUpdateUserLocation() {
@@ -163,7 +160,7 @@
   setInterval(fetchAndUpdateUserLocation, 5000);
 
   // --- Directions Function ---
-  window.getDirections = function (lat, lng) {
+  window.getDirections = function(lat, lng) {
     const destination = { lat: lat, lng: lng };
     directionsService.route({
       origin: userMarker.getPosition(),
@@ -179,41 +176,40 @@
   };
 
   // --- Payment Integration ---
-  window.proceedToPay = function (slotId) {
+  window.proceedToPay = function(slotId) {
     const paymentAmount = 40.00;
     fetch('/create_order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ amount: paymentAmount, vehicle: 'car' })
     })
-      .then(response => response.json())
-      .then(data => {
-        const options = {
-          key: data.key_id,
-          amount: data.amount,
-          currency: data.currency,
-          name: "Smart Parking System",
-          description: `Payment for Slot ID: ${slotId}`,
-          order_id: data.order_id,
-          handler: function (response) {
-            alert('Payment successful! Payment ID: ' + response.razorpay_payment_id);
-          },
-          prefill: { name: "Test User", email: "test.user@example.com", contact: "9999999999" },
-          notes: { slot_id: slotId },
-          theme: { color: "#3399cc" }
-        };
-        const rzp1 = new Razorpay(options);
-        rzp1.on('payment.failed', function (response) {
-          alert('Payment failed! Error: ' + response.error.description);
-        });
-        rzp1.open();
-      })
-      .catch(error => console.error('Error:', error));
+    .then(response => response.json())
+    .then(data => {
+      const options = {
+        key: data.key_id,
+        amount: data.amount,
+        currency: data.currency,
+        name: "Smart Parking System",
+        description: `Payment for Slot ID: ${slotId}`,
+        order_id: data.order_id,
+        handler: function (response) {
+          alert('Payment successful! Payment ID: ' + response.razorpay_payment_id);
+        },
+        prefill: { name: "Test User", email: "test.user@example.com", contact: "9999999999" },
+        notes: { slot_id: slotId },
+        theme: { color: "#3399cc" }
+      };
+      const rzp1 = new Razorpay(options);
+      rzp1.on('payment.failed', function (response) {
+        alert('Payment failed! Error: ' + response.error.description);
+      });
+      rzp1.open();
+    })
+    .catch(error => console.error('Error:', error));
   };
 }
 </script>
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-<script async defer
-  src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}&libraries=places&callback=initMap"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}&libraries=places&callback=initMap"></script>
 {% endblock %}
