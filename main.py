@@ -447,10 +447,10 @@ def Driver():
         current_radius_meters = 1500
 
     # --- Handle missing NavIC data safely ---
-    # user_lat = session.get('esp_lat')
-    # user_lng = session.get('esp_lng')
-    user_lat = 12.90868
-    user_lng = 77.60358
+    user_lat = session.get('esp_lat')
+    user_lng = session.get('esp_lng')
+    # user_lat = 12.90868
+    # user_lng = 77.60358
 
     if user_lat is None or user_lng is None:
         return "Waiting for NavIC device to send location...", 503
