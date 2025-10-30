@@ -515,30 +515,21 @@ def about():
 @app.route("/contact", methods=["GET", "POST"])
 def contact():
     if request.method == "POST":
-        # Handle both JSON and form submissions
-        if request.is_json:
-            data = request.get_json()
-            user_email = data.get("email")
-            message = data.get("message")
-        else:
-            user_email = request.form.get("email")
-            message = request.form.get("message")
-
-        if not user_email or not message:
-            flash("Email and message are required.", "warning")
-            return redirect(url_for("contact"))
-
-        try:
+        user_email = request.form.get("email")
+        message = request.form.get("message")
+        if user_email and message:
             new_concern = UserConcerns(user_email=user_email, message=message)
             db.session.add(new_concern)
-            db.session.commit()
-            flash("Your message has been received! Our team will reach out soon.", "success")
+            try:
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                app.logger.exception("DB commit failed: %s", e)
+                flash("Internal error. Please try again.", "error")
+            flash("Your message has been sent successfully!", "success")
             return redirect(url_for("contact"))
-        except Exception as e:
-            db.session.rollback()
-            flash(f"Error submitting message: {e}", "error")
-            return redirect(url_for("contact"))
-
+        else:
+            flash("Please fill in all required fields.", "error")
     return render_template("contact.html")
 
 @app.route("/get_started")
