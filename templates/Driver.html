@@ -101,8 +101,8 @@ const nearbySlots = {{ slots | tojson }};
 nearbySlots.forEach((slot, index) => {
   const slotPosition = { lat: parseFloat(slot.latitude), lng: parseFloat(slot.longitude) };
   const fillColor = (slot.civilian_zone && slot.civilian_zone.toLowerCase() === "yes")
-    ? "rgb(0,255, 0)" // Green for civilian zones
-    : "rgb(255, 0, 0)"; // Red for others
+    ? "rgb(24,234, 34)" // Green for civilian zones
+    : "rgb(234, 67, 53)"; // Red for others
 
   // Custom SVG pin icon
   const svgMarker = {
