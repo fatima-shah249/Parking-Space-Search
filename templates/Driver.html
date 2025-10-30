@@ -99,37 +99,42 @@ function initMap() {
   // --- Parking Zone Markers ---
 const nearbySlots = {{ slots | tojson }};
 nearbySlots.forEach((slot, index) => {
-  const slotPosition = { lat: parseFloat(slot.latitude), lng: parseFloat(slot.longitude) };
-  const fillColor = (slot.civilian_zone && slot.civilian_zone.toLowerCase() === "yes")
-    ? "#1B5E20" // Green for civilian zones
-    : "#B71C1C"; // Red for others
+    const slotPosition = { 
+        lat: parseFloat(slot.latitude), 
+        lng: parseFloat(slot.longitude) 
+    };
 
-  // Custom SVG pin icon
-  const svgMarker = {
-    path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z",
-    fillColor: fillColor,
-    fillOpacity: 1,
-    strokeColor: "#FFFFFF",
-    strokeWeight: 2,
-    scale: 1.6,
-    anchor: new google.maps.Point(12, 24),
-    labelOrigin: new google.maps.Point(12, 10)
-  };
+    // This logic correctly sets the color
+    const fillColor = (slot.civilian_zone && slot.civilian_zone.toLowerCase() === "yes")
+        ? "#1B5E20" // Green for civilian zones
+        : "#B71C1C"; // Red for others (like the image)
 
-  const marker = new google.maps.Marker({
-    position: slotPosition,
-    map,
-    title: slot.location || "Unknown Location",
-    icon: svgMarker,
-    label: {
-      text: (index + 1).toString(),
-      color: "#FFFFFF",
-      fontSize: "13px",
-      fontWeight: "bold"
-    },
-    zIndex: 2
-  });
+    // This is the custom SVG marker icon that draws the pin shape
+    const svgMarker = {
+        path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z",
+        fillColor: fillColor,
+        fillOpacity: 1,
+        strokeColor: "#FFFFFF",
+        strokeWeight: 2,
+        scale: 1.6,
+        anchor: new google.maps.Point(12, 24),
+        labelOrigin: new google.maps.Point(12, 10)
+    };
 
+    const marker = new google.maps.Marker({
+        position: slotPosition,
+        map: map, // Assumes your map variable is named 'map'
+        title: slot.location || "Unknown Location",
+        icon: svgMarker,
+        label: {
+            text: (index + 1).toString(), // The number on the pin
+            color: "white", // Changed label to white for better contrast
+            fontSize: "13px",
+            fontWeight: "bold"
+        },
+        zIndex: 2
+    });
+});
   marker.addListener("click", () => {
     const contentString = `
       <div class="p-2 font-sans" style="max-width: 250px;">
