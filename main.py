@@ -286,20 +286,12 @@ def handle_application(app_id, action):
 
 @app.route('/update_location', methods=['POST'])
 def update_location():
-    try:
-        data = request.get_json(force=True)
-        lat = data.get("lat")
-        lng = data.get("lng")
-        if lat is None or lng is None:
-            return jsonify({"error": "Missing lat or lng"}), 400
-
-        session['esp_lat'] = float(lat)
-        session['esp_lng'] = float(lng)
-        print("Received data:", data)
-
-        return jsonify({"message": "Location updated"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    global esp_lat, esp_lng
+    data = request.get_json()
+    print("Received data:", data)
+    esp_lat = data.get('lat')
+    esp_lng = data.get('lng')
+    return jsonify({"message": "Location updated"}), 200
 
 @app.route('/get_latest_location')
 def get_latest_location():
@@ -429,6 +421,7 @@ global esp_lat, esp_lng
 
 @app.route('/Driver', methods=['GET', 'POST'])
 def Driver():
+    global esp_lat, esp_lng
     nearby_slots_data = []
     current_radius_meters = 1500  # Default value in meters (matches HTML)
 
@@ -447,10 +440,13 @@ def Driver():
         current_radius_meters = 1500
 
     # --- Handle missing NavIC data safely ---
-    user_lat = session.get('esp_lat')
-    user_lng = session.get('esp_lng')
+    # user_lat = session.get('esp_lat')
+    # user_lng = session.get('esp_lng')
     # user_lat = 12.90868
     # user_lng = 77.60358
+
+    user_lat = esp_lat
+    user_lng = esp_lng
 
     if user_lat is None or user_lng is None:
         return "Waiting for NavIC device to send location...", 503
