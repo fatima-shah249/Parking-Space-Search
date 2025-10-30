@@ -1,61 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            /* Add your background image URL here */
-            background-image: url('https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?q=80&w=2070&auto=format&fit=crop');
+            background:
+                linear-gradient(135deg, rgba(58, 123, 213, 0.6), rgba(58, 213, 185, 0.6)),
+                url('https://images.unsplash.com/photo-1503264116251-35a269479413?q=80&w=2070&auto=format&fit=crop');
             background-size: cover;
             background-position: center;
+            background-attachment: fixed;
+            color: white;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
     </style>
 </head>
+
 <body>
-    <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+    <div class="absolute inset-0 bg-black/60"></div>
 
     <div class="relative flex flex-col items-center justify-center min-h-screen p-6">
-        
-        <div class="w-full max-w-3xl p-8 space-y-8 bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl">
-            
-            <div class="text-center">
-                <svg class="w-16 h-16 mx-auto text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.5m0 5.5a2.25 2.25 0 0 1-2.25-2.25m2.25 2.25a2.25 2.25 0 0 0 2.25-2.25M12 18v-5.5m0 5.5v2.25m0-2.25a2.25 2.25 0 0 0-2.25-2.25M12 18.75a2.25 2.25 0 0 1 2.25-2.25m-2.25 2.25a2.25 2.25 0 0 0-2.25 2.25M6.75 7.5l.75-1.5 1.5-1.5.75-1.5.75-1.5L12 3m0 0l2.25 4.5 1.5 3H6.75m6-7.5h3.75l-1.5 3h-3.75z" />
-                </svg>
-                <h1 class="mt-4 text-4xl font-bold text-gray-900">Choose Your Portal</h1>
-                <p class="mt-2 text-md text-gray-700">Select your role to proceed to the correct login page.</p>
+        <div class="w-full max-w-3xl p-10 glass rounded-3xl shadow-2xl transition-all duration-300 hover:scale-[1.01]">
+
+            <div class="text-center flex flex-col items-center">
+                <div
+                    class="p-4 bg-gradient-to-tr from-blue-500 to-blue-400 rounded-full shadow-lg ring-4 ring-blue-300/40 animate-pulse">
+                    <img src="/static/images/parking_logo.png" alt="Parking Logo"
+                        class="w-28 h-28 rounded-full shadow-xl">
+                </div>
+                <h1 class="mt-6 text-4xl font-extrabold text-white drop-shadow-lg">Choose Your Portal</h1>
+                <p class="mt-2 text-lg text-gray-200">Select your role to proceed to the correct login page.</p>
             </div>
 
-            <div class="flex flex-col md:flex-row items-center justify-center space-y-6 md:space-y-0 md:space-x-8 pt-6">
-
-                <a href="/Driver" class="flex items-center justify-center w-full md:w-auto bg-blue-500 text-white font-semibold py-4 px-10 rounded-xl shadow-lg hover:bg-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-300 transform hover:scale-105 transition-all duration-300 ease-in-out text-center">
-                    <svg class="w-6 h-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+            <div
+                class="flex flex-col md:flex-row items-center justify-center space-y-6 md:space-y-0 md:space-x-8 pt-10">
+                <a href="/Driver"
+                    class="flex items-center justify-center w-full md:w-auto bg-gradient-to-r from-blue-500 to-sky-500 text-white font-semibold py-4 px-10 rounded-xl shadow-lg hover:shadow-blue-500/40 transform hover:scale-110 transition-all duration-300 ease-in-out text-center">
+                    <svg class="w-7 h-7 mr-3 text-white-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"
+                        fill="currentColor">
+                        <path
+                            d="M52 26h-2.3l-2.4-7.2A4 4 0 0 0 43.5 16H20.5a4 4 0 0 0-3.8 2.8L14.3 26H12a4 4 0 0 0-4 4v12a4 4 0 0 0 4 4h2v2a4 4 0 1 0 8 0v-2h20v2a4 4 0 1 0 8 0v-2h2a4 4 0 0 0 4-4V30a4 4 0 0 0-4-4ZM20.5 20h23l2 6H18.5ZM16 42a2 2 0 1 1-4 0v-2h4Zm32 2a2 2 0 1 1-4 0v-2h4Zm6-6a2 2 0 0 1-2 2H12a2 2 0 0 1-2-2V30a2 2 0 0 1 2-2h40a2 2 0 0 1 2 2Z" />
+                        <circle cx="20" cy="46" r="2" />
+                        <circle cx="44" cy="46" r="2" />
+                    </svg>
                     User
                 </a>
 
-                <a href="/login" class="flex items-center justify-center w-full md:w-auto bg-indigo-500 text-white font-semibold py-4 px-10 rounded-xl shadow-lg hover:bg-indigo-600 focus:outline-none focus:ring-4 focus:ring-indigo-300 transform hover:scale-105 transition-all duration-300 ease-in-out text-center">
-                    <svg class="w-6 h-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Z" /></svg>
+                <a href="/login"
+                    class="flex items-center justify-center w-full md:w-auto bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold py-4 px-10 rounded-xl shadow-lg hover:shadow-indigo-500/40 transform hover:scale-110 transition-all duration-300 ease-in-out text-center">
+                    <svg class="w-6 h-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Z" />
+                    </svg>
                     Admin
                 </a>
 
-                <a href="/Civilian_login" class="flex items-center justify-center w-full md:w-auto bg-teal-500 text-white font-semibold py-4 px-10 rounded-xl shadow-lg hover:bg-teal-600 focus:outline-none focus:ring-4 focus:ring-teal-300 transform hover:scale-105 transition-all duration-300 ease-in-out text-center">
-                    <svg class="w-6 h-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.125-.504 1.125-1.125V14.25m-17.25 4.5v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 1.5 12V5.625c0-.621.504-1.125 1.125-1.125h17.25c.621 0 1.125.504 1.125 1.125v6.375m-19.5-6.375h19.5M15.75 5.25a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-.008Z" /></svg>
+                <a href="/Civilian_login"
+                    class="flex items-center justify-center w-full md:w-auto bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-semibold py-4 px-10 rounded-xl shadow-lg hover:shadow-emerald-400/40 transform hover:scale-110 transition-all duration-300 ease-in-out text-center">
+                    <svg class="w-6 h-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                    </svg>
                     Civilian Parking
                 </a>
             </div>
         </div>
-        
-        <footer class="text-center text-white/70 text-sm mt-8">
+
+        <footer class="text-center text-gray-300 text-sm mt-8">
             <p>&copy; 2025 Your Company Name. All rights reserved.</p>
         </footer>
-
     </div>
 </body>
+
 </html>

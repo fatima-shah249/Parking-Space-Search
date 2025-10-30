@@ -100,20 +100,22 @@ function initMap() {
 const nearbySlots = {{ slots | tojson }};
 nearbySlots.forEach((slot, index) => {
   const slotPosition = { lat: parseFloat(slot.latitude), lng: parseFloat(slot.longitude) };
+  
+  // Darker color tones
   const fillColor = (slot.civilian_zone && slot.civilian_zone.toLowerCase() === "yes")
-    ? "#4CAF50" // Green for civilian zones
-    : "#FF5252"; // Red for others
+    ? "#2E7D32"  // Dark green for civilian zones
+    : "#C62828";  // Dark red for others
 
-  // Custom SVG pin icon
+  // Custom dark SVG marker with label
   const svgMarker = {
     path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z",
     fillColor: fillColor,
     fillOpacity: 1,
     strokeColor: "#FFFFFF",
     strokeWeight: 2,
-    scale: 1.6,
+    scale: 1.8,
     anchor: new google.maps.Point(12, 24),
-    labelOrigin: new google.maps.Point(12, 11)
+    labelOrigin: new google.maps.Point(12, 10)
   };
 
   const marker = new google.maps.Marker({
@@ -123,12 +125,13 @@ nearbySlots.forEach((slot, index) => {
     icon: svgMarker,
     label: {
       text: (index + 1).toString(),
-      color: "#000000",
-      fontSize: "10px",
+      color: "#FFFFFF",
+      fontSize: "12px",
       fontWeight: "bold"
     },
     zIndex: 2
   });
+});
 
   marker.addListener("click", () => {
     const contentString = `
