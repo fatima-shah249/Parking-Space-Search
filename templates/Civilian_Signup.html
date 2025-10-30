@@ -6,75 +6,77 @@
 <div class="min-h-screen bg-gray-100 flex">
     <div class="hidden md:block md:w-1/2 bg-cover bg-center relative"
         style="background-image: url('/static/images/login_image.jpg');">
-        <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div class="text-center text-white px-6">
-                <h2 class="text-3xl font-bold mb-4">Turn Your Parking Space Into a Business</h2>
-                <p class="text-lg leading-relaxed">
-                    This platform is exclusively designed for property owners who want to 
-                    convert their available parking spaces into a smart, income-generating business. 
-                    Register your space, manage your slots, and start earning effortlessly.
-                </p>
-            </div>
-        </div>
     </div>
 
     <div class="w-full md:w-1/2 flex items-center justify-center p-8">
         <div class="max-w-md w-full">
-            <div class="flex justify-end mb-8 space-x-6">
-                <a href="/Civilian_login" class="font-semibold text-gray-400 hover:text-blue-600">Login</a>
-                <a href="/Civilian_Signup" class="font-semibold text-blue-600 border-b-2 border-blue-600 pb-1">
-                    Sign up
-                </a>
-            </div>
+            <div class="max-w-md w-full">
+                <!-- Exclusive Info Section -->
+                <div class="mb-6 text-center bg-blue-50 border-l-4 border-blue-600 p-4 rounded-md shadow-sm">
+                    <h2 class="text-lg font-semibold text-blue-700">Exclusive Platform</h2>
+                    <p class="text-sm text-gray-600 mt-1">
+                        This signup is exclusively for individuals who want to convert their parking
+                        space into a business and earn through our smart parking system.
+                    </p>
+                </div>
 
-            <div class="mb-10">
-                <h1 class="text-3xl font-bold text-gray-800">Create an Account</h1>
-                <p class="text-gray-500 mt-1">
-                    Get started with your free account — join our network of smart parking entrepreneurs.
-                </p>
-            </div>
+                <!-- Login / Signup Switch -->
+                <div class="flex justify-end mb-8 space-x-6">
+                    <a href="/Civilian_login" class="font-semibold text-gray-400 hover:text-blue-600">Login</a>
+                    <a href="/Civilian_Signup" class="font-semibold text-blue-600 border-b-2 border-blue-600 pb-1">
+                        Sign up
+                    </a>
+                </div>
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            {% for category, message in messages %}
-            <div class="flex items-center p-4 mb-4 text-sm rounded-lg 
-                {% if category == 'error' %} bg-red-100 text-red-800 {% else %} bg-blue-100 text-blue-800 {% endif %}" 
-                role="alert">
-                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd"
-                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                        clip-rule="evenodd"></path>
-                </svg>
-                <div>{{ message }}</div>
-            </div>
-            {% endfor %}
-            {% endif %}
-            {% endwith %}
 
-            <form method="POST" action="{{ url_for('Civilian_Signup') }}" class="space-y-5">
-                <div>
-                    <label for="email" class="block text-xs font-medium text-gray-500">Email</label>
-                    <input type="email" id="email" name="email" required autofocus
-                        class="mt-1 block w-full py-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 transition">
+                <div class="mb-10">
+                    <h1 class="text-3xl font-bold text-gray-800">Create an Account</h1>
+                    <p class="text-gray-500 mt-1">
+                        Get started with your free account — join our network of smart parking entrepreneurs.
+                    </p>
                 </div>
-                <div>
-                    <label for="username" class="block text-xs font-medium text-gray-500">User Name</label>
-                    <input type="text" id="username" name="username" required
-                        class="mt-1 block w-full py-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 transition">
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div class="flex items-center p-4 mb-4 text-sm rounded-lg 
+                {% if category == 'error' %} bg-red-100 text-red-800 {% else %} bg-blue-100 text-blue-800 {% endif %}"
+                    role="alert">
+                    <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                            clip-rule="evenodd"></path>
+                    </svg>
+                    <div>{{ message }}</div>
                 </div>
-                <div>
-                    <label for="password" class="block text-xs font-medium text-gray-500">Password</label>
-                    <input type="password" id="password" name="password" required minlength="6"
-                        class="mt-1 block w-full py-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 transition">
-                </div>
-                <div class="pt-4">
-                    <button type="submit"
-                        class="w-full flex justify-center py-3 px-4 rounded-lg shadow-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-105">
-                        Create Account
-                    </button>
-                </div>
-            </form>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                <form method="POST" action="{{ url_for('Civilian_Signup') }}" class="space-y-5">
+                    <div>
+                        <label for="email" class="block text-xs font-medium text-gray-500">Email</label>
+                        <input type="email" id="email" name="email" required autofocus
+                            class="mt-1 block w-full py-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                    <div>
+                        <label for="username" class="block text-xs font-medium text-gray-500">User Name</label>
+                        <input type="text" id="username" name="username" required
+                            class="mt-1 block w-full py-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                    <div>
+                        <label for="password" class="block text-xs font-medium text-gray-500">Password</label>
+                        <input type="password" id="password" name="password" required minlength="6"
+                            class="mt-1 block w-full py-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                    <div class="pt-4">
+                        <button type="submit"
+                            class="w-full flex justify-center py-3 px-4 rounded-lg shadow-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-105">
+                            Create Account
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
-{% endblock %}
+    {% endblock %}
