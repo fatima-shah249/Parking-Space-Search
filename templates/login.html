@@ -9,21 +9,32 @@
     
     <div class="w-full md:w-1/2 flex items-center justify-center p-8">
         <div class="max-w-md w-full">
+            
+            <!-- Exclusive Section -->
+            <div class="mb-6 text-center bg-blue-50 border-l-4 border-blue-600 p-4 rounded-md shadow-sm">
+                <h2 class="text-lg font-semibold text-blue-700">Exclusive Platform</h2>
+                <p class="text-sm text-gray-600 mt-1">
+                    This admin login portal is exclusively for system administrators who manage and monitor
+                    the Smart Parking Platform. Unauthorized access is strictly prohibited.
+                </p>
+            </div>
+
             <div class="flex justify-end mb-8">
                 <a href="#" class="font-semibold text-blue-600 border-b-2 border-blue-600 pb-1">Login</a>
-                <a href="#" class="ml-6 font-semibold text-gray-400 hover:text-blue-600">Sign up</a>
             </div>
 
             <div class="mb-10">
                 <h1 class="text-3xl font-bold text-gray-800">Welcome back</h1>
-                <p class="text-gray-500 mt-1">Please login to your account.</p>
+                <p class="text-gray-500 mt-1">Please login to your admin account.</p>
             </div>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
                     <div class="flex items-center p-4 mb-4 text-sm rounded-lg {% if category == 'error' %} bg-red-100 text-red-800 {% else %} bg-blue-100 text-blue-800 {% endif %}" role="alert">
-                        <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+                        <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                        </svg>
                         <div>{{ message }}</div>
                     </div>
                     {% endfor %}
@@ -33,7 +44,8 @@
             <form method="POST" class="space-y-5">
                 <div>
                     <label for="username" class="block text-xs font-medium text-gray-500">User Name</label>
-                    <input type="text" id="username" name="username" required class="mt-1 block w-full py-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 transition">
+                    <input type="text" id="username" name="username" required
+                        class="mt-1 block w-full py-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 transition">
                 </div>
                 
                 <div>
@@ -42,16 +54,23 @@
                         <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-500">Forget?</a>
                     </div>
                     <div class="relative">
-                        <input type="password" id="password" name="password" required class="mt-1 block w-full py-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 transition pr-10">
+                        <input type="password" id="password" name="password" required
+                            class="mt-1 block w-full py-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 transition pr-10">
                         <span id="togglePassword" class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer">
-                            <svg id="eye-open" class="w-5 h-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>
-                            <svg id="eye-closed" class="w-5 h-5 text-gray-500 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zM14.95 14.95a1 1 0 01-1.414 0l-1.293-1.293a7.016 7.016 0 01-4.242-4.242L6.293 7.707a1 1 0 010-1.414l-1.293-1.293a1 1 0 011.414-1.414l1.293 1.293A7.016 7.016 0 0110 5.05c.345 0 .684.028 1.015.081l1.102-1.102a1 1 0 011.414 1.414l-1.293 1.293a7.016 7.016 0 01-1.88 2.455l1.823 1.823a1 1 0 010 1.414l1.293 1.293a1 1 0 010 1.414z" clip-rule="evenodd" /></svg>
+                            <svg id="eye-open" class="w-5 h-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                            </svg>
+                            <svg id="eye-closed" class="w-5 h-5 text-gray-500 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zM14.95 14.95a1 1 0 01-1.414 0l-1.293-1.293a7.016 7.016 0 01-4.242-4.242L6.293 7.707a1 1 0 010-1.414l-1.293-1.293a1 1 0 011.414-1.414l1.293 1.293A7.016 7.016 0 0110 5.05c.345 0 .684.028 1.015.081l1.102-1.102a1 1 0 011.414 1.414l-1.293 1.293a7.016 7.016 0 01-1.88 2.455l1.823 1.823a1 1 0 010 1.414l1.293 1.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                            </svg>
                         </span>
                     </div>
                 </div>
 
                 <div class="pt-4">
-                    <button type="submit" class="w-full flex justify-center py-3 px-4 rounded-lg shadow-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-105">
+                    <button type="submit"
+                        class="w-full flex justify-center py-3 px-4 rounded-lg shadow-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-105">
                         Login
                     </button>
                 </div>
