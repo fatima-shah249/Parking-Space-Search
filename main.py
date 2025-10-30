@@ -512,6 +512,27 @@ def Driver():
 def about():
     return render_template('about.html')
 
+@app.route("/contact", methods=["GET", "POST"])
+def contact():
+    if request.method == "POST":
+        data = request.get_json() or request.form
+        user_email = data.get("email")
+        message = data.get("message")
+
+        if not user_email or not message:
+            return jsonify({"error": "Email and message are required"}), 400
+
+        try:
+            new_concern = UserConcerns(user_email=user_email, message=message)
+            db.session.add(new_concern)
+            db.session.commit()
+            return jsonify({"message": "Your message has been received"}), 201
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"error": str(e)}), 500
+
+    return render_template("contact.html")
+
 @app.route("/get_started")
 def get_started():
     if 'user_id' not in session:
