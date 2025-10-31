@@ -426,35 +426,19 @@ esp_lng=None
 def Driver():
     global esp_lat, esp_lng
     nearby_slots_data = []
-    current_radius_meters = 1500  # Default value in meters (matches HTML)
+    current_radius_meters = None  # None means "no radius filter"
 
-    if request.method == 'POST':
-        # --- Handle radius from the form ---
-        try:
-            # Get radius from form (it's in meters from the HTML input)
-            current_radius_meters = int(request.form.get('radius_meters', 1500))
-            radius_km = float(current_radius_meters) / 1000.0
-        except (ValueError, TypeError):
-            radius_km = 1.5 # Fallback if conversion fails
-            flash("Invalid radius value, defaulting to 1.5km.", "warning")
-    else:
-        # --- Handle GET request (first page load) ---
-        radius_km = 1.5 # Default 1.5km radius on first load
-        current_radius_meters = 1500
-
-    # --- Handle missing NavIC data safely ---
-    # user_lat = session.get('esp_lat')
-    # user_lng = session.get('esp_lng')
-    user_lat = 12.90868
-    user_lng = 77.60358
-
-    # user_lat = esp_lat
-    # user_lng = esp_lng
+    # --- Handle NavIC or test coordinates ---
+    esp_lat = 12.90868
+    esp_lng = 77.60358
+    
+    user_lat = esp_lat
+    user_lng = esp_lng
 
     if user_lat is None or user_lng is None:
         return "Waiting for NavIC device to send location...", 503
 
-    # --- Load Google Maps API Key (from environment if available) ---
+    # --- Google Maps API Key ---
     GMAPS_API_KEY = os.environ.get("GMAPS_API_KEY", "YOUR_FALLBACK_API_KEY_HERE")
 
     # --- Reverse Geocode User Location ---
@@ -470,36 +454,47 @@ def Driver():
         app.logger.error(f"Geocoding error: {e}")
         user_location_address = "Error fetching address"
 
-    # --- Query Nearby Parking Slots (now uses dynamic radius_km) ---
+    # --- Query Logic ---
     try:
-        query = text("""
-            SELECT * FROM (
-                SELECT 
-                    slot_id, location, latitude, longitude, available_slots, occupied_slots,civilian_zone,
-                    (6371 * ACOS(
-                        LEAST(1.0,
-                            COS(RADIANS(:lat)) * COS(RADIANS(latitude)) *
-                            COS(RADIANS(longitude) - RADIANS(:lng)) +
-                            SIN(RADIANS(:lat)) * SIN(RADIANS(latitude))
-                        )
-                    )) AS distance_km
-                FROM location_of_slots
-            ) AS sub
-            WHERE distance_km <= :radius_km
-            ORDER BY distance_km ASC;
-        """)
+        if request.method == 'POST':
+            radius_input = request.form.get('radius_meters')
+            try:
+                if radius_input:
+                    current_radius_meters = int(radius_input)
+                    radius_km = float(current_radius_meters) / 1000.0
+                    query = text("""
+                        SELECT * FROM (
+                            SELECT 
+                                slot_id, location, latitude, longitude, available_slots, occupied_slots, civilian_zone,
+                                (6371 * ACOS(
+                                    LEAST(1.0,
+                                        COS(RADIANS(:lat)) * COS(RADIANS(latitude)) *
+                                        COS(RADIANS(longitude) - RADIANS(:lng)) +
+                                        SIN(RADIANS(:lat)) * SIN(RADIANS(latitude))
+                                    )
+                                )) AS distance_km
+                            FROM location_of_slots
+                        ) AS sub
+                        WHERE distance_km <= :radius_km
+                        ORDER BY distance_km ASC;
+                    """)
+                    result = db.session.execute(query, {"lat": user_lat, "lng": user_lng, "radius_km": radius_km})
+                else:
+                    query = text("SELECT * FROM location_of_slots ORDER BY slot_id ASC;")
+                    result = db.session.execute(query)
+            except (ValueError, TypeError):
+                query = text("SELECT * FROM location_of_slots ORDER BY slot_id ASC;")
+                result = db.session.execute(query)
+        else:
+            query = text("SELECT * FROM location_of_slots ORDER BY slot_id ASC;")
+            result = db.session.execute(query)
 
-        result = db.session.execute(
-            query,
-            # Use the new dynamic radius_km variable here
-            {"lat": user_lat, "lng": user_lng, "radius_km": radius_km}
-        )
         nearby_slots_data = [dict(row._mapping) for row in result]
     except Exception as e:
         app.logger.error(f"Database error fetching nearby slots: {e}")
-        flash("Unable to retrieve nearby parking zones.", "error")
+        flash("Unable to retrieve parking zones.", "error")
 
-    # --- Render the Driver Page ---
+    # --- Render Template ---
     return render_template(
         'Driver.html',
         slots=nearby_slots_data,
@@ -507,8 +502,7 @@ def Driver():
         lng=user_lng,
         User_location=user_location_address,
         api_key='AIzaSyAqyzQZLE0TvmXnqNcII65Edvu71PV-HCI',
-        # Pass the current radius back to the HTML to display in the box
-        current_radius_meters=current_radius_meters
+        current_radius_meters=current_radius_meters or ''
     )
 
 @app.route("/about")
