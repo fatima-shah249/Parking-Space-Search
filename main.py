@@ -426,21 +426,21 @@ global esp_lat, esp_lng
 def Driver():
     global esp_lat, esp_lng
     nearby_slots_data = []
-    current_radius_meters = 1500  # Default value in meters (matches HTML)
+    current_radius_meters = 15000  # Default value in meters (matches HTML)
 
     if request.method == 'POST':
         # --- Handle radius from the form ---
         try:
             # Get radius from form (it's in meters from the HTML input)
-            current_radius_meters = int(request.form.get('radius_meters', 1500))
+            current_radius_meters = int(request.form.get('radius_meters', 15000))
             radius_km = float(current_radius_meters) / 1000.0
         except (ValueError, TypeError):
             radius_km = 1.5 # Fallback if conversion fails
             flash("Invalid radius value, defaulting to 1.5km.", "warning")
     else:
         # --- Handle GET request (first page load) ---
-        radius_km = 1.5 # Default 1.5km radius on first load
-        current_radius_meters = 1500
+        radius_km = 15 # Default 1.5km radius on first load
+        current_radius_meters = 15000
 
     # --- Handle missing NavIC data safely ---
     # user_lat = session.get('esp_lat')
