@@ -318,8 +318,8 @@ def create_order():
     })
 
 global esp_lat, esp_lng
-esp_lat=None
-esp_lng=None
+# esp_lat=None
+# esp_lng=None
 
 # # location finding 
 # geolocator = Nominatim(user_agent="ParkingFinderApp_vinay_2025")
