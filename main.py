@@ -445,8 +445,9 @@ def Driver():
     # --- Handle missing NavIC data safely ---
     # user_lat = session.get('esp_lat')
     # user_lng = session.get('esp_lng')
-    esp_lat = 12.90868
-    esp_lng = 77.60358
+    
+    # esp_lat = 12.90868
+    # esp_lng = 77.60358
 
     user_lat = esp_lat
     user_lng = esp_lng
