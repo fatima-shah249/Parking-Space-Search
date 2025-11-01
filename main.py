@@ -66,9 +66,9 @@ def import_csvs_if_needed():
 
             df = pd.read_csv(file_path, encoding="latin1")
             df.to_sql(table_name, db.engine, if_exists="append", index=False)
-            app.logger.info(f"✅ Imported {len(df)} rows into {table_name}")
+            app.logger.info(f"Imported {len(df)} rows into {table_name}")
         except Exception as e:
-            app.logger.exception(f"❌ Failed to import {file_name}: {e}")
+            app.logger.exception(f"Failed to import {file_name}: {e}")
             db.session.rollback()
 
 # ===================================================================
@@ -318,110 +318,6 @@ def create_order():
     })
 
 global esp_lat, esp_lng
-# esp_lat=None
-# esp_lng=None
-
-# # location finding 
-# geolocator = Nominatim(user_agent="ParkingFinderApp_vinay_2025")
-
-# # Coordinates
-# latitude = esp_lat
-# longitude = esp_lng
-
-# # Reverse geocode
-# location_obj = geolocator.reverse((latitude, longitude), language='en')
-# User_location = location_obj.address if location_obj else "Location not found"
-
-# @app.route('/User', methods=['GET', 'POST'])
-# def User():
-#     global esp_lat, esp_lng, nearby_zones
-#     esp_lat, esp_lng = 12.90732, 77.60590
-#     curr_lat, curr_lng = esp_lat, esp_lng
-#     radius_km = None
-#     nearby_slots = []
-
-#     if request.method == 'POST':
-#         radius_input = request.form.get('radius')
-#         if radius_input:
-#             try:
-#                 radius_m = float(radius_input)
-#                 if radius_m <= 0:
-#                     flash("Radius must be positive.", "error")
-#                     return redirect(url_for("User"))
-
-#                 radius_km = radius_m / 1000.0  # convert meters to km
-
-#                 # PostgreSQL-compatible query using a subquery to filter by distance
-#                 query = """
-#                     SELECT *
-#                     FROM (
-#                         SELECT slot_id, location, latitude, longitude, available_slots, occupied_slots,
-#                                (6371 * ACOS(
-#                                    LEAST(1.0, COS(RADIANS(:lat)) * COS(RADIANS(latitude)) *
-#                                    COS(RADIANS(longitude) - RADIANS(:lng)) +
-#                                    SIN(RADIANS(:lat)) * SIN(RADIANS(latitude)))
-#                                )) AS distance_km
-#                         FROM location_of_slots
-#                     ) AS sub
-#                     WHERE distance_km < :radius_km
-#                     ORDER BY distance_km ASC;
-#                 """
-
-#                 result = db.session.execute(
-#                     text(query),
-#                     {"lat": curr_lat, "lng": curr_lng, "radius_km": radius_km}
-#                 )
-#                 nearby_slots = result.fetchall()
-#                 nearby_zones = nearby_slots
-
-#                 if not nearby_slots:
-#                     flash("No slots found within this radius.", "info")
-
-#             except ValueError:
-#                 flash("Invalid radius value.", "error")
-#             except Exception as e:
-#                 flash(f"Error fetching nearby slots: {e}", "error")
-
-#     return render_template(
-#         'User.html',
-#         slots=nearby_slots,
-#         lat=curr_lat,
-#         lng=curr_lng,
-#         radius_km=(radius_km * 1000 if radius_km else None),User_location=User_location
-#     )
-
-# @app.route('/map')
-# def map_view():
-#     try:
-#         # Convert query params to float/int
-#         dest_lat = float(request.args.get('lat', 0))
-#         dest_lng = float(request.args.get('lng', 0))
-#         zone_id = int(request.args.get('zone_id', 0))
-
-#         # Get the selected parking zone
-#         zone = Location_of_slots.query.get_or_404(zone_id)
-
-#         # Example city rates
-#         city_rates = {'car': 40, 'bike': 20}
-
-#         # User location (temporary fixed coordinates)
-#         esp_lat = 12.90732
-#         esp_lng = 77.60590
-
-#         return render_template(
-#             'map.html',
-#             dest_lat=dest_lat,
-#             dest_lng=dest_lng,
-#             user_lat=esp_lat,
-#             user_lng=esp_lng,
-#             slots=nearby_zones,          # consider passing only relevant slots
-#             selected_zone=zone,
-#             city_rates=city_rates
-#         )
-#     except Exception as e:
-#         flash(f"Error loading map: {e}", "error")
-#         return redirect(url_for("User"))
-
 @app.route('/Driver', methods=['GET', 'POST'])
 def Driver():
     global esp_lat, esp_lng
@@ -441,12 +337,8 @@ def Driver():
         # --- Handle GET request (first page load) ---
         radius_km = 15 # Default 1.5km radius on first load
         current_radius_meters = 15000
-
-    # --- Handle missing NavIC data safely ---
-    # user_lat = session.get('esp_lat')
-    # user_lng = session.get('esp_lng')
     
-    # esp_lat = 12.90868
+    # esp_lat = 12.90868  // for testing without connecting Navic device
     # esp_lng = 77.60358
 
     user_lat = esp_lat
