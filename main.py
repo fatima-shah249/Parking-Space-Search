@@ -399,7 +399,7 @@ def Driver():
         lat=user_lat,
         lng=user_lng,
         User_location=user_location_address,
-        api_key='AIzaSyAqyzQZLE0TvmXnqNcII65Edvu71PV-HCI',
+        api_key='Google Map API Key',
         # Pass the current radius back to the HTML to display in the box
         current_radius_meters=current_radius_meters
     )
